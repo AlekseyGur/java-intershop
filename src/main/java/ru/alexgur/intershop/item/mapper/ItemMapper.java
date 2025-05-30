@@ -1,0 +1,46 @@
+package ru.alexgur.intershop.item.mapper;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+
+import lombok.experimental.UtilityClass;
+import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.model.Item;
+
+@UtilityClass
+public class ItemMapper {
+    public static ItemDto toDto(Item item) {
+        ItemDto itemDto = new ItemDto();
+        itemDto.setId(item.getId());
+        itemDto.setTitle(item.getTitle());
+        itemDto.setDescription(item.getDescription());
+        itemDto.setImgPath(item.getImgPath());
+        itemDto.setPrice(item.getPrice());
+        itemDto.setCount(item.getCount());
+        return itemDto;
+    }
+
+    public static Item toItem(ItemDto itemDto) {
+        Item item = new Item();
+        item.setId(itemDto.getId());
+        item.setTitle(itemDto.getTitle());
+        item.setDescription(itemDto.getDescription());
+        item.setImgPath(itemDto.getImgPath());
+        item.setPrice(itemDto.getPrice());
+        item.setCount(itemDto.getCount());
+        return item;
+    }
+
+    public static List<Item> toItem(List<ItemDto> itemsDto) {
+        return itemsDto.stream().map(ItemMapper::toItem).toList();
+    }
+
+    public static List<ItemDto> toDto(List<Item> items) {
+        return items.stream().map(ItemMapper::toDto).toList();
+    }
+
+    public static Page<ItemDto> toDto(Page<Item> posts) {
+        return posts.map(ItemMapper::toDto);
+    }
+}

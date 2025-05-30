@@ -1,0 +1,90 @@
+# Общие настройки, применяемые ко всем профилям
+server:
+  port: 8080
+
+logging:
+  level:
+    root: ERROR
+    org:
+      springframework: ERROR
+
+spring:
+  main:
+    banner-mode: off
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: admin
+    password: 
+  
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+upload:
+  images:
+    dir: /tmp/upload/blog/images
+    base-url: /images
+    format: jpg
+
+
+
+
+---
+# Профиль prod
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/myblog
+    driverClassName: org.postgresql.Driver
+    username: myblog
+    password: 
+
+upload:
+  images:
+    dir: /upload/blog/images
+    base-url: /images
+    format: jpg
+
+---
+# Профиль dev
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: admin
+    password: 
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console

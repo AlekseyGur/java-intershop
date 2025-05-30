@@ -1,0 +1,140 @@
+package ru.alexgur.intershop.order.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+import ru.alexgur.intershop.item.mapper.ItemMapper;
+import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.item.model.Item;
+import ru.alexgur.intershop.item.service.ItemService;
+import ru.alexgur.intershop.order.dto.OrderDto;
+import ru.alexgur.intershop.order.model.Order;
+import ru.alexgur.intershop.order.mapper.OrderMapper;
+import ru.alexgur.intershop.order.model.OrderItem;
+import ru.alexgur.intershop.order.repository.OrderItemsRepository;
+import ru.alexgur.intershop.order.repository.OrderRepository;
+import ru.alexgur.intershop.system.exception.NotFoundException;
+
+@Service
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+    private final static int MAX_ITEMS_QUANTITY = 100;
+    private final OrderRepository orderRepository;
+    private final OrderItemsRepository orderItemRepository;
+    private final ItemService itemService;
+
+    @Override
+    public List<OrderDto> getAll() {
+        return orderRepository.findAll().stream()
+                .map(OrderMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public OrderDto get(Long orderId) {
+        return orderRepository.findById(orderId)
+                .map(OrderMapper::toDto)
+                .orElseThrow(() -> new NotFoundException("Заказ не найден"));
+    }
+
+    @Transactional
+    public void addItemToOrder(Long orderId, Long itemId, Integer quantity) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+
+        if (order.isPaid()) {
+            throw new IllegalStateException("Заказ уже оплачен, редактирование невозможно");
+        }
+
+        Item item = ItemMapper.toItem(itemService.get(itemId));
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setItem(item);
+        orderItem.setQuantity(quantity);
+        orderItemRepository.save(orderItem);
+    }
+
+    @Transactional
+    public void removeItemFromOrder(Long orderId, Long orderItemId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+
+        if (order.isPaid()) {
+            throw new IllegalStateException("Заказ уже оплачен, редактирование невозможно");
+        }
+
+        orderItemRepository.deleteById(orderItemId);
+    }
+
+    @Transactional
+    public OrderDto buyItems() {
+        OrderDto order = getCart();
+
+        if (order.isPaid()) {
+            throw new IllegalStateException("Невозможно оплатить пустой заказ");
+        }
+
+        order.setPaid(true);
+        orderRepository.setIsPaid(order.getId());
+        return order;
+    }
+
+    @Transactional(readOnly = true)
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+    }
+
+    public OrderDto getCart() {
+        return orderRepository.findFirstByIsPaidFalseOrderByCreatedAtDesc()
+                .map(OrderMapper::toDto)
+                .orElse(createOrder());
+    }
+
+    @Transactional
+    public OrderDto createOrder() {
+        Order order = new Order();
+        return OrderMapper.toDto(orderRepository.save(order));
+    }
+
+    @Override
+    public boolean checkIdExist(Long id) {
+        return orderRepository.existsById(id);
+    }
+
+    @Override
+    public void updateCartQuantity(Long itemId, ActionType action) {
+        OrderDto order = getCart();
+
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndItemId(order.getId(), itemId)
+                .orElseThrow(() -> new NotFoundException("Товар не найден в корзине"));
+
+        switch (action) {
+            case PLUS -> updateQuantityPlus(orderItem);
+            case MINUS -> updateQuantityMinus(orderItem);
+            case DELETE -> deleteOrderItem(orderItem);
+            default -> throw new IllegalArgumentException("Неверное действие с количеством товара");
+        }
+    }
+
+    private void updateQuantityPlus(OrderItem orderItem) {
+        if (orderItem.getQuantity() < MAX_ITEMS_QUANTITY) {
+            orderItem.setQuantity(orderItem.getQuantity() + 1);
+            orderItemRepository.save(orderItem);
+        }
+    }
+
+    private void updateQuantityMinus(OrderItem orderItem) {
+        if (orderItem.getQuantity() > 1) {
+            orderItem.setQuantity(orderItem.getQuantity() - 1);
+            orderItemRepository.save(orderItem);
+        }
+    }
+
+    private void deleteOrderItem(OrderItem orderItem) {
+        orderItemRepository.delete(orderItem);
+    }
+}

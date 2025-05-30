@@ -1,0 +1,57 @@
+# Общие настройки, применяемые ко всем профилям
+server:
+  port: 8080
+
+logging:
+  level:
+    root: ERROR
+    org:
+      springframework: ERROR
+
+spring:
+  main:
+    banner-mode: off
+    
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  thymeleaf:
+    cache: false
+    check-template-location: true
+
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    servlet:
+      content-type: text/html
+
+upload:
+  images:
+    dir: /tmp/upload/blog/images
+    base-url: /images
+    format: jpg
+
+---
+# Профиль test
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: admin
+    password: 
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
