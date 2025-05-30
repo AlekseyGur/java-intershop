@@ -1,4 +1,4 @@
-package ru.alexgur.blog;
+package ru.alexgur.intershop;
 
 import java.util.Random;
 
