@@ -37,10 +37,10 @@
                         <b th:text="${item.getTitle()}"></b>
                     </td>
                     <td>
-                        <b th:text="${item.getCount()}+' шт.'"></b>
+                        <b th:text="${item.getQuantity()}+' шт.'"></b>
                     </td>
                     <td>
-                        <b th:text="${item.getPrice()*item.getCount()}+' руб.'"></b>
+                        <b th:text="${item.getPrice()*item.getQuantity()}+' руб.'"></b>
                     </td>
                 </tr>
             </table>

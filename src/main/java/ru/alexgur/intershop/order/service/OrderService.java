@@ -12,7 +12,7 @@ public interface OrderService {
 
     void updateCartQuantity(Long itemId, ActionType action);
 
-    OrderDto getCart();
+    OrderDto getCartOrCreateNew();
 
     OrderDto buyItems();
 

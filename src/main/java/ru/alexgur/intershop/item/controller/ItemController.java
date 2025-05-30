@@ -43,6 +43,7 @@ public class ItemController {
         model.addAttribute("items", items);
         model.addAttribute("paging", new Paging(items));
         model.addAttribute("search", search);
+        model.addAttribute("sort", sort.toString());
 
         return "main";
     }

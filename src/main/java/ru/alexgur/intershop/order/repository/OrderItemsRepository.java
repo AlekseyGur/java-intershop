@@ -1,5 +1,6 @@
 package ru.alexgur.intershop.order.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,8 @@ public interface OrderItemsRepository extends JpaRepository<OrderItem, Long> {
             @Param("orderId") Long orderId,
             @Param("itemId") Long itemId,
             @Param("quantity") Integer quantity);
+
+    @Query("SELECT oi FROM OrderItem oi WHERE oi.order.id = :orderId AND oi.item.id IN (:itemIds)")
+    List<OrderItem> findAllByItemIdsAndOrderId(@Param("itemIds") Collection<Long> itemIds,
+                    @Param("orderId") Long orderId);
 }

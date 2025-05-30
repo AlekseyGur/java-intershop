@@ -42,6 +42,8 @@ class CartControllerTest extends TestWebConfiguration {
                 .param("action", ActionType.PLUS.toString()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", startsWith("/cart")));
+
+        mockMvc.perform(get("/cart"));
     }
 
     @Test

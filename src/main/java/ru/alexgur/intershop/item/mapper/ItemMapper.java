@@ -30,7 +30,7 @@ public class ItemMapper {
         return item;
     }
 
-    public static List<Item> toItem(List<ItemDto> itemsDto) {
+    public static List<Item> fromDto(List<ItemDto> itemsDto) {
         return itemsDto.stream().map(ItemMapper::toItem).toList();
     }
 

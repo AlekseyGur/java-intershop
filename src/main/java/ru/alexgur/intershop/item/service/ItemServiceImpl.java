@@ -73,14 +73,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private List<ItemDto> addCartInfo(List<ItemDto> items) {
-        Map<Long, Integer> itemsIdsInCart = orderService.getCart().getItems().stream()
+        Map<Long, Integer> itemsIdsInCart = orderService.getCartOrCreateNew().getItems().stream()
                 .collect(Collectors.groupingBy(
-                        Item::getId,
+                        ItemDto::getId,
                         Collectors.summingInt(x -> 1)));
 
         return items.stream()
                 .map(x -> {
-                    x.setCount(itemsIdsInCart.getOrDefault(x.getId(), 0));
+                    x.setQuantity(itemsIdsInCart.getOrDefault(x.getId(), 0));
                     return x;
                 }).toList();
     }
