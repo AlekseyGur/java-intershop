@@ -69,7 +69,7 @@
 | `GET /`            | string search<br>string sort (NO, ALPHA, PRICE)<br>int pageSize<br>int pageNumber | Шаблон `main.html`, список товаров                    |
 | `GET /items/{id}`  |                            | Шаблон `item.html`, карточка товара                  |
 | `GET /cart`  |                            | Шаблон `cart.html`, список товаров в корзине          |
-| `POST /cart/items/{id}` | string action (PLUS, MINUS, DELETE) | Редирект на `/cart/items`                             |
-| `POST /buy`        |                            | Редирект на `/orders/{id}?newOrder=true`              |
+| `POST /cart/items/{id}` | string action (PLUS, MINUS, DELETE) | Редирект на `/cart`                             |
+| `POST /cart/buy`        |                            | Редирект на `/orders/{id}?newOrder=true`              |
 | `GET /orders`      |                            | Шаблон `orders.html`, список заказов                 |
 | `GET /orders/{id}` | boolean newOrder           | Шаблон `order.html`, карточка заказа                 |
