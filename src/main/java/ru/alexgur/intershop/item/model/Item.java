@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.item.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,6 +16,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@Entity
 @Table(name = "items")
 public class Item {
     @Id
@@ -32,11 +34,6 @@ public class Item {
     @Column(name = "img_path", nullable = false, length = 255)
     @NotBlank(message = "Путь к изображению не может быть пустым")
     private String imgPath;
-
-    @Column(name = "count", nullable = false)
-    @Min(value = 0, message = "Количество должно быть положительным")
-    @NotNull(message = "Количество не может быть пустым")
-    private Integer count;
 
     @Column(name = "price", nullable = false)
     @Min(value = 0, message = "Цена должна быть положительной")

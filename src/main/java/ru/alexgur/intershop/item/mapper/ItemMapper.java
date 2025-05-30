@@ -17,7 +17,6 @@ public class ItemMapper {
         itemDto.setDescription(item.getDescription());
         itemDto.setImgPath(item.getImgPath());
         itemDto.setPrice(item.getPrice());
-        itemDto.setCount(item.getCount());
         return itemDto;
     }
 
@@ -28,7 +27,6 @@ public class ItemMapper {
         item.setDescription(itemDto.getDescription());
         item.setImgPath(itemDto.getImgPath());
         item.setPrice(itemDto.getPrice());
-        item.setCount(itemDto.getCount());
         return item;
     }
 

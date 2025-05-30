@@ -28,7 +28,7 @@ public class ItemDto {
 
     @Column(nullable = false)
     @Min(value = 0, message = "Количество должно быть положительным")
-    private Integer count;
+    private Integer count = 0;
 
     @Column(nullable = false)
     @Min(value = 0, message = "Цена должна быть положительной")

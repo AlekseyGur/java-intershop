@@ -1,5 +1,7 @@
 package ru.alexgur.intershop.order.controller;
 
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.item.model.Item;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderService;
 
@@ -20,9 +23,11 @@ import ru.alexgur.intershop.order.service.OrderService;
 public class CartController {
     private final OrderService orderService;
 
-    @GetMapping("/items")
+    @GetMapping
     public String getCartItems(Model model) {
-        model.addAttribute("items", orderService.getCart());
+        List<Item> items = orderService.getCart().getItems();
+        model.addAttribute("items", items);
+        model.addAttribute("empty", items.isEmpty());
         return "cart";
     }
 
@@ -31,7 +36,7 @@ public class CartController {
             @RequestParam ActionType action) {
         orderService.updateCartQuantity(id, action);
 
-        return "redirect:/cart/items";
+        return "redirect:/cart";
     }
 
     @PostMapping("/buy")

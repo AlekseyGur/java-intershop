@@ -19,12 +19,14 @@ import ru.alexgur.intershop.item.service.ItemService;
 @Controller
 @RequiredArgsConstructor
 @Validated
-public class ItemListController {
+public class ItemController {
     private final ItemService itemService;
 
     @GetMapping("/items/{id}")
-    public ItemDto get(@PathVariable @Positive Long id) {
-        return itemService.get(id);
+    public String get(@PathVariable @Positive Long id,
+            Model model) {
+        model.addAttribute("item", itemService.get(id));
+        return "item";
     }
 
     @GetMapping("/")
@@ -38,7 +40,7 @@ public class ItemListController {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         Page<ItemDto> items = itemService.getAll(pageable, search, sort);
 
-        model.addAttribute("posts", items);
+        model.addAttribute("items", items);
         model.addAttribute("paging", new Paging(items));
         model.addAttribute("search", search);
 

@@ -1,17 +1,19 @@
 package ru.alexgur.intershop.order.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
-import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.item.model.Item;
-import ru.alexgur.intershop.item.service.ItemService;
+import ru.alexgur.intershop.item.repository.ItemRepository;
 import ru.alexgur.intershop.order.dto.OrderDto;
+import ru.alexgur.intershop.order.dto.OrderItemDto;
 import ru.alexgur.intershop.order.model.Order;
+import ru.alexgur.intershop.order.mapper.OrderItemMapper;
 import ru.alexgur.intershop.order.mapper.OrderMapper;
 import ru.alexgur.intershop.order.model.OrderItem;
 import ru.alexgur.intershop.order.repository.OrderItemsRepository;
@@ -21,15 +23,16 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-    private final static int MAX_ITEMS_QUANTITY = 100;
+    private static final int MAX_ITEMS_QUANTITY = 100;
     private final OrderRepository orderRepository;
     private final OrderItemsRepository orderItemRepository;
-    private final ItemService itemService;
+    private final ItemRepository itemRepository;
 
     @Override
     public List<OrderDto> getAll() {
         return orderRepository.findAll().stream()
                 .map(OrderMapper::toDto)
+                .map(this::calculateTotalSum)
                 .toList();
     }
 
@@ -37,24 +40,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto get(Long orderId) {
         return orderRepository.findById(orderId)
                 .map(OrderMapper::toDto)
+                .map(this::calculateTotalSum)
                 .orElseThrow(() -> new NotFoundException("Заказ не найден"));
     }
 
     @Transactional
-    public void addItemToOrder(Long orderId, Long itemId, Integer quantity) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
-
-        if (order.isPaid()) {
-            throw new IllegalStateException("Заказ уже оплачен, редактирование невозможно");
-        }
-
-        Item item = ItemMapper.toItem(itemService.get(itemId));
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrder(order);
-        orderItem.setItem(item);
-        orderItem.setQuantity(quantity);
-        orderItemRepository.save(orderItem);
+    public OrderItemDto addItemToOrder(Long orderId, Long itemId, Integer quantity) {
+        return OrderItemMapper.toDto(addItemToOrderImpl(orderId, itemId, quantity));
     }
 
     @Transactional
@@ -62,7 +54,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
 
-        if (order.isPaid()) {
+        if (order.getIsPaid()) {
             throw new IllegalStateException("Заказ уже оплачен, редактирование невозможно");
         }
 
@@ -73,11 +65,11 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto buyItems() {
         OrderDto order = getCart();
 
-        if (order.isPaid()) {
+        if (order.getIsPaid()) {
             throw new IllegalStateException("Невозможно оплатить пустой заказ");
         }
 
-        order.setPaid(true);
+        order.setIsPaid(true);
         orderRepository.setIsPaid(order.getId());
         return order;
     }
@@ -89,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public OrderDto getCart() {
-        return orderRepository.findFirstByIsPaidFalseOrderByCreatedAtDesc()
+        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
                 .map(OrderMapper::toDto)
                 .orElse(createOrder());
     }
@@ -110,7 +102,7 @@ public class OrderServiceImpl implements OrderService {
         OrderDto order = getCart();
 
         OrderItem orderItem = orderItemRepository.findByOrderIdAndItemId(order.getId(), itemId)
-                .orElseThrow(() -> new NotFoundException("Товар не найден в корзине"));
+                .orElseGet(() -> addItemToOrderImpl(order.getId(), itemId, 0));
 
         switch (action) {
             case PLUS -> updateQuantityPlus(orderItem);
@@ -131,10 +123,39 @@ public class OrderServiceImpl implements OrderService {
         if (orderItem.getQuantity() > 1) {
             orderItem.setQuantity(orderItem.getQuantity() - 1);
             orderItemRepository.save(orderItem);
+        } else if (orderItem.getQuantity() == 1) {
+            orderItemRepository.delete(orderItem);
         }
     }
 
     private void deleteOrderItem(OrderItem orderItem) {
         orderItemRepository.delete(orderItem);
+    }
+
+    private OrderItem addItemToOrderImpl(Long orderId, Long itemId, Integer quantity) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+
+        if (order.getIsPaid()) {
+            throw new IllegalStateException("Заказ уже оплачен, редактирование невозможно");
+        }
+
+        Item item = itemRepository.findById(itemId).get();
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setItem(item);
+        orderItem.setQuantity(quantity);
+        orderItemRepository.save(orderItem);
+        return orderItemRepository.findByOrderIdAndItemId(order.getId(), itemId).get();
+    }
+
+    private OrderDto calculateTotalSum(OrderDto order) {
+        List<Item> items = order.getItems();
+        Double totalSum = items.isEmpty() ? 0.0
+                : items.stream()
+                        .mapToDouble(Item::getPrice)
+                        .sum();
+        order.setTotalSum(totalSum);
+        return order;
     }
 }

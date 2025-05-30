@@ -34,19 +34,12 @@ spring:
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    hibernate.ddl-auto: create
   
   h2:
     console:
       enabled: true
       path: /h2-console
-
-upload:
-  images:
-    dir: /tmp/upload/blog/images
-    base-url: /images
-    format: jpg
-
-
 
 
 ---

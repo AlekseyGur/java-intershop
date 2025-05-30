@@ -2,6 +2,7 @@ package ru.alexgur.intershop.order.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import ru.alexgur.intershop.item.model.Item;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.Size;
 
 @Getter
 @Setter
+@ToString
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -20,11 +22,11 @@ public class Order {
     private Long id;
 
     @Column(name = "is_paid", nullable = false)
-    private boolean isPaid = false;
+    private Boolean isPaid = false;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
     @JoinTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "item_id"))
-    private List<Item> items;
+    private List<Item> items = List.of();
 
     @Size(max = 255)
     private String deliveryAddress;
