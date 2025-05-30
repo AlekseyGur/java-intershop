@@ -32,6 +32,7 @@ public class OrderServiceImpl implements OrderService {
     private final ItemRepository itemRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderDto> getAll() {
         return orderRepository.findAllByIsPaidTrue().stream()
                 .map(OrderMapper::toDto)
@@ -41,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OrderDto get(Long orderId) {
         return orderRepository.findById(orderId)
                 .map(OrderMapper::toDto)
