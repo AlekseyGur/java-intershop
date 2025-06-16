@@ -12,22 +12,13 @@ spring:
   main:
     banner-mode: off
     
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
-
   thymeleaf:
     cache: false
     check-template-location: true
-
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
     encoding: UTF-8
-    servlet:
-      content-type: text/html
 
 upload:
   images:
@@ -42,9 +33,8 @@ spring:
     activate:
       on-profile: test
 
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driverClassName: org.h2.Driver
+  r2dbc:
+    url: r2dbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
     username: admin
     password: 
   

@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 import lombok.experimental.UtilityClass;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.dto.ItemNewDto;
 import ru.alexgur.intershop.item.model.Item;
 
 @UtilityClass
@@ -30,6 +32,15 @@ public class ItemMapper {
         return item;
     }
 
+    public static Item toItem(ItemNewDto itemNewDto) {
+        Item item = new Item();
+        item.setTitle(itemNewDto.getTitle());
+        item.setDescription(itemNewDto.getDescription());
+        item.setImgPath(itemNewDto.getImgPath());
+        item.setPrice(itemNewDto.getPrice());
+        return item;
+    }
+
     public static List<Item> fromDto(List<ItemDto> itemsDto) {
         return itemsDto.stream().map(ItemMapper::toItem).toList();
     }
@@ -40,5 +51,9 @@ public class ItemMapper {
 
     public static Page<ItemDto> toDto(Page<Item> posts) {
         return posts.map(ItemMapper::toDto);
+    }
+
+    public static Mono<Item> toMonoItem(Mono<ItemNewDto> monoDto) {
+        return monoDto.map(ItemMapper::toItem);
     }
 }

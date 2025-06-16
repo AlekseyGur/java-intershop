@@ -1,20 +1,20 @@
 package ru.alexgur.intershop.order.service;
 
-import java.util.List;
-
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.order.dto.OrderDto;
 
 public interface OrderService {
-    List<OrderDto> getAll();
+    Flux<OrderDto> getAll();
 
-    OrderDto get(Long id);
+    Mono<OrderDto> get(Long id);
 
-    void updateCartQuantity(Long itemId, ActionType action);
+    Mono<Void> updateCartQuantity(Long itemId, ActionType action);
 
-    OrderDto getCartOrCreateNew();
+    Mono<OrderDto> getCartOrCreateNew();
 
-    OrderDto buyItems();
+    Mono<OrderDto> buyItems();
 
-    boolean checkIdExist(Long id);
+    Mono<Boolean> checkIdExist(Long id);
 }

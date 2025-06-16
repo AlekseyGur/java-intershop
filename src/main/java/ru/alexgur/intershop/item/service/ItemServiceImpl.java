@@ -1,5 +1,6 @@
 package ru.alexgur.intershop.item.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,7 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.dto.ItemNewDto;
+import ru.alexgur.intershop.item.dto.ReactivePage;
 import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.model.Item;
 import ru.alexgur.intershop.item.model.SortType;
@@ -23,75 +28,75 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
 
     @Override
     @Transactional
-    public ItemDto add(ItemDto itemDto) {
-        Item item = ItemMapper.toItem(itemDto);
-        return ItemMapper.toDto(itemRepository.save(item));
+    public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
+        return ItemMapper.toMonoItem(dto)
+                .flatMap(item -> itemRepository.save(item))
+                .map(ItemMapper::toDto);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ItemDto get(Long id) {
+    public Mono<ItemDto> get(Long id) {
         return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
                 .map(ItemMapper::toDto)
-                .map(this::addCartInfo)
-                .orElseThrow(() -> new NotFoundException("Товар с таким id не найдена"));
+                .flatMap(this::addCartInfo);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean checkIdExist(Long itemId) {
+    @Transactional
+    public Mono<Boolean> checkIdExist(Long itemId) {
         return itemRepository.existsById(itemId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<ItemDto> getAll(Pageable pageable, String search, SortType sort) {
+    @Transactional
+    public Mono<ReactivePage<ItemDto>> getAll(Integer pageNumber, Integer pageSize, String search, SortType sort) {
+        final int offset = pageNumber * pageSize;
+        final int num = pageNumber;
+        final int size = pageSize;
 
-        Sort jpaSort = switch (sort) {
-            case NO -> Sort.unsorted();
-            case ALPHA -> Sort.by("title");
-            case PRICE -> Sort.by("price");
-            default -> throw new IllegalArgumentException("Неизвестный тип сортировки");
-        };
+        Mono<Long> totalElements = itemRepository.countBySearchTerm(search);
+        Flux<Item> content;
 
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), jpaSort);
-
-        Page<Item> res;
-        if (search == null) {
-            res = itemRepository.findAll(pageable);
+        if (sort.equals(SortType.ALPHA)) {
+            content = itemRepository.findAllBySearchTermSortedByTitle(pageSize, offset, search);
         } else {
-            res = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(pageable, search);
+            content = itemRepository.findAllBySearchTermSortedByPrice(pageSize, offset, search);
         }
 
-        return addCartInfo(ItemMapper.toDto(res));
+        Flux<ItemDto> contentDto = content
+                .map(ItemMapper::toDto)
+                .flatMap(this::addCartInfo);
+
+        return Mono.zip(contentDto.collectList(), totalElements)
+                .map(tuple -> new ReactivePage<>(
+                        Flux.fromIterable(tuple.getT1()),
+                        Mono.just(tuple.getT2()),
+                        num,
+                        size))
+                .onErrorResume(error -> {
+                    return Mono.error(new RuntimeException("Ошибка получения данных"));
+                });
     }
 
-    private List<ItemDto> addCartInfo(List<ItemDto> items) {
-        Map<Long, Integer> itemsIdsInCart = orderService.getCartOrCreateNew().getItems().stream()
-                .collect(Collectors.groupingBy(
-                        ItemDto::getId,
-                        Collectors.summingInt(x -> 1)));
-
-        return items.stream()
-                .map(x -> {
-                    x.setQuantity(itemsIdsInCart.getOrDefault(x.getId(), 0));
-                    return x;
-                }).toList();
+    private Mono<ItemDto> addCartInfo(ItemDto dto) {
+        return orderService.getCartOrCreateNew()
+                .map(cart -> cart.getItems())
+                .defaultIfEmpty(Collections.emptyList())
+                .map(items -> {
+                    long count = items.stream()
+                            .filter(i -> i.getId().equals(dto.getId()))
+                            .count();
+                    dto.setQuantity(count > 0 ? (int) count : 0);
+                    return dto;
+                });
     }
 
-    private ItemDto addCartInfo(ItemDto post) {
-        return addCartInfo(List.of(post)).get(0);
-    }
-
-    private Page<ItemDto> addCartInfo(Page<ItemDto> items) {
-        return new PageImpl<>(addCartInfo(items.getContent()),
-                items.getPageable(),
-                items.getTotalElements());
-    }
 }

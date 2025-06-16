@@ -1,17 +1,17 @@
 package ru.alexgur.intershop.item.service;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.dto.ItemNewDto;
+import ru.alexgur.intershop.item.dto.ReactivePage;
 import ru.alexgur.intershop.item.model.SortType;
 
 public interface ItemService {
-    ItemDto add(ItemDto item);
+    Mono<ItemDto> add(Mono<ItemNewDto> item);
 
-    Page<ItemDto> getAll(Pageable pageable, String search, SortType sort);
+    Mono<ReactivePage<ItemDto>> getAll(Integer limit, Integer offset, String search, SortType sort);
 
-    boolean checkIdExist(Long id);
+    Mono<Boolean> checkIdExist(Long id);
 
-    ItemDto get(Long id);
+    Mono<ItemDto> get(Long id);
 }

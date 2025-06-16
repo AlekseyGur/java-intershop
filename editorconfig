@@ -1,3 +1,0 @@
-# Верхний регистр для констант
-[*.{java,scala,js,py}]
-upper_case_constants = true
