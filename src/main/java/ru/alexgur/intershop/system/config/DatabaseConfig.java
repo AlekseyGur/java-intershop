@@ -7,8 +7,12 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @Configuration
 public class DatabaseConfig {
 
+
     @Bean(initMethod = "start", destroyMethod = "stop")
     public PostgreSQLContainer<?> postgresqlContainer() {
-        return new PostgreSQLContainer<>("postgres:latest");
+        return new PostgreSQLContainer<>("postgres:latest")
+                .withDatabaseName("testdb")
+                .withUsername("testuser")
+                .withPassword("testpass");
     }
 }

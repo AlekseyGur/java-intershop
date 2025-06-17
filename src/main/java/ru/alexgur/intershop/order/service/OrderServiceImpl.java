@@ -172,8 +172,8 @@ public class OrderServiceImpl implements OrderService {
                             .switchIfEmpty(Mono.error(new IllegalArgumentException("Товар не найден")))
                             .flatMap(item -> {
                                 OrderItem orderItem = new OrderItem();
-                                orderItem.setOrder(order);
-                                orderItem.setItem(item);
+                                orderItem.setOrderId(orderId);
+                                orderItem.setItemId(item.getId());
                                 orderItem.setQuantity(quantity);
                                 return orderItemRepository.save(orderItem);
                             });
@@ -191,7 +191,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDto loadItemQuantity(OrderDto order) {
-        List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
+        // List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
         // Flux<OrderItem> items =
         // orderItemRepository.findAllByItemIdAndOrderId(itemsIds, order.getId());
 

@@ -7,33 +7,29 @@ import ru.alexgur.intershop.item.model.Item;
 
 import java.util.List;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Getter
 @Setter
 @ToString
-@Entity
 @Table(name = "orders")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @Column(name = "is_paid")
+    @Column("is_paid")
     private Boolean isPaid = false;
 
-    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
-    @JoinTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"), inverseJoinColumns = @JoinColumn(name = "item_id"))
-    private List<Item> items = List.of();
-
-    @Size(max = 255)
+    @Column("delivery_address")
     private String deliveryAddress;
 
-    @Size(max = 100)
+    @Column("contact_phone")
     private String contactPhone;
 
-    @Size(max = 100)
+    @Column("contact_email")
     private String contactEmail;
+
+    private List<Item> items = List.of();
 }

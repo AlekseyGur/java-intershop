@@ -13,13 +13,18 @@ import ru.alexgur.intershop.item.mapper.ItemMapper;
 @Mapper(componentModel = "spring", uses = { ItemMapper.class, OrderMapper.class })
 public interface OrderItemMapper {
 
+    // @Mapping(target = "id", ignore = true)
+    @Mapping(target = "item", ignore = true)
+    @Mapping(target = "order", ignore = true)
     OrderItemDto toDto(OrderItem order);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "itemId", ignore = true)
+    @Mapping(target = "orderId", ignore = true)
     OrderItem fromDto(OrderItemDto orderDto);
 
     List<OrderItem> fromDto(List<OrderItemDto> ordersDto);
 
-    List<OrderItemDto> toDto(List<OrderItem> orders);
+    // List<OrderItemDto> toDto(List<OrderItem> orders);
 
 }
