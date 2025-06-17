@@ -7,13 +7,6 @@ logging:
     org:
       springframework: INFO
 
-testcontainers:
-  postgresql:
-    port: 5432
-    database: testdb
-    username: testuser
-    password: testpass
-
 spring:
   main:
     banner-mode: off
@@ -31,11 +24,6 @@ spring:
     r2dbc:
       repositories:
         enabled: true
-
-  r2dbc:
-    url: r2dbc:postgresql://testuser:testpass@localhost:${testcontainers.postgresql.port}/testdb
-    username: testuser
-    password: testpass
 
   thymeleaf:
     prefix: classpath:/templates/
