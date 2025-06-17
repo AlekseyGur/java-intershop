@@ -1,6 +1,8 @@
 package ru.alexgur.intershop.order.controller;
 
 import java.net.URI;
+import java.util.List;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +16,6 @@ import org.springframework.web.reactive.result.view.Rendering;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Flux;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.order.service.OrderService;
@@ -29,10 +30,10 @@ public class CartController {
     public Mono<Rendering> getCartItems() {
         return orderService.getCartOrCreateNew()
                 .flatMap(orderDto -> {
-                    Flux<ItemDto> items = orderDto.getItems();
+                    List<ItemDto> items = orderDto.getItems();
                     return Mono.just(Rendering.view("cart")
-                            .modelAttribute("items", items.collectList())
-                            .modelAttribute("empty", items.hasElements())
+                            .modelAttribute("items", items)
+                            .modelAttribute("empty", items.isEmpty())
                             .modelAttribute("total", orderDto.getTotalSum())
                             .build());
                 });

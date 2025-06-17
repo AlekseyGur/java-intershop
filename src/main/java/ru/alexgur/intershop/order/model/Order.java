@@ -21,7 +21,7 @@ public class Order {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "is_paid", nullable = false)
+    @Column(name = "is_paid")
     private Boolean isPaid = false;
 
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)

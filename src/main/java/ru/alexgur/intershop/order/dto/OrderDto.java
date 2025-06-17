@@ -1,8 +1,9 @@
 package ru.alexgur.intershop.order.dto;
 
+import java.util.List;
+
 import lombok.Getter;
 import lombok.Setter;
-import reactor.core.publisher.Flux;
 import ru.alexgur.intershop.item.dto.ItemDto;
 
 @Getter
@@ -10,7 +11,7 @@ import ru.alexgur.intershop.item.dto.ItemDto;
 public class OrderDto {
     private Long id;
     private Boolean isPaid = false;
-    private Flux<ItemDto> items = Flux.empty();
+    private List<ItemDto> items = List.of();
     private String deliveryAddress;
     private String contactPhone;
     private String contactEmail;

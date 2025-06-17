@@ -1,15 +1,6 @@
 package ru.alexgur.intershop.item.service;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,20 +23,22 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
+    private final ItemMapper itemMapper;
 
     @Override
     @Transactional
     public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
-        return ItemMapper.toMonoItem(dto)
-                .flatMap(item -> itemRepository.save(item))
-                .map(ItemMapper::toDto);
+        return dto
+                .map(itemMapper::fromDto)
+                .flatMap(itemRepository::save)
+                .map(itemMapper::toDto);
     }
 
     @Override
     public Mono<ItemDto> get(Long id) {
         return itemRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
-                .map(ItemMapper::toDto)
+                .map(itemMapper::toDto)
                 .flatMap(this::addCartInfo);
     }
 
@@ -72,7 +65,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Flux<ItemDto> contentDto = content
-                .map(ItemMapper::toDto)
+                .map(itemMapper::toDto)
                 .flatMap(this::addCartInfo);
 
         return Mono.zip(contentDto.collectList(), totalElements)

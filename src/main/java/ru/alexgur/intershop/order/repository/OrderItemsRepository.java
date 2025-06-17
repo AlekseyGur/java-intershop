@@ -2,21 +2,26 @@ package ru.alexgur.intershop.order.repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.order.model.OrderItem;
 
 @Repository
-public interface OrderItemsRepository extends JpaRepository<OrderItem, Long> {
-    List<OrderItem> findByOrderId(Long orderId);
+public interface OrderItemsRepository extends R2dbcRepository<OrderItem, Long> {
 
-    Optional<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId);
+    Mono<Map<Long, Integer>> findQuantitiesByItemIdsAndOrderId(List<Long> itemIds, Long orderId);
+
+    Flux<OrderItem> findByOrderId(Long orderId);
+
+    Mono<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId);
 
     void deleteByOrderIdAndItemId(Long orderId, Long itemId);
 

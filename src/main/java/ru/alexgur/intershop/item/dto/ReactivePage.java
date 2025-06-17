@@ -38,11 +38,11 @@ public class ReactivePage<T> {
         return size;
     }
 
-    public boolean isHasPrevious() {
+    public boolean hasPrevious() {
         return hasPrevious;
     }
 
-    public Mono<Boolean> isHasNext() {
+    public Mono<Boolean> hasNext() {
         return hasNext;
     }
 }
