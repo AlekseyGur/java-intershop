@@ -1,8 +1,6 @@
 package ru.alexgur.intershop.order.service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Mono<OrderDto> setOrderPaid(OrderDto order) {
-        return orderRepository.setIsPaid(order.getId())
+        return orderRepository.isPaidTrue(order.getId())
                 .thenReturn(order);
     }
 
@@ -194,14 +192,16 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderDto loadItemQuantity(OrderDto order) {
         List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
-        List<OrderItem> items = orderItemRepository.findAllByItemIdsAndOrderId(itemsIds, order.getId());
+        // Flux<OrderItem> items =
+        // orderItemRepository.findAllByItemIdAndOrderId(itemsIds, order.getId());
 
-        Map<Long, Integer> quantByItemId = items.stream()
-                .collect(Collectors.toMap(
-                        OrderItem::getId,
-                        OrderItem::getQuantity));
+        // Map<Long, Integer> quantByItemId = items.stream()
+        // .collect(Collectors.toMap(
+        // OrderItem::getId,
+        // OrderItem::getQuantity));
 
-        order.getItems().forEach(item -> item.setQuantity(quantByItemId.getOrDefault(item.getId(), 0)));
+        // order.getItems().forEach(item ->
+        // item.setQuantity(quantByItemId.getOrDefault(item.getId(), 0)));
         return order;
     }
 }
