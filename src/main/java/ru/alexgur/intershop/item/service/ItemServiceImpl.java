@@ -2,7 +2,6 @@ package ru.alexgur.intershop.item.service;
 
 import java.util.Collections;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -19,14 +18,12 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
     private final ItemMapper itemMapper;
 
     @Override
-    @Transactional
     public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
         return dto
                 .map(itemMapper::fromDto)
@@ -43,40 +40,48 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    @Transactional
     public Mono<Boolean> checkIdExist(Long itemId) {
         return itemRepository.existsById(itemId);
     }
 
     @Override
-    @Transactional
     public Mono<ReactivePage<ItemDto>> getAll(Integer pageNumber, Integer pageSize, String search, SortType sort) {
         final int offset = pageNumber * pageSize;
         final int num = pageNumber;
         final int size = pageSize;
+        String sortBy = sort.equals(SortType.ALPHA) ? "price" : "title";
 
-        Mono<Long> totalElements = itemRepository.countBySearchTerm(search);
+        String searchPattern;
         Flux<Item> content;
+        Mono<Long> totalElements;
 
-        if (sort.equals(SortType.ALPHA)) {
-            content = itemRepository.findAllBySearchTermSortedByTitle(pageSize, offset, search);
+        if (search == null) {
+            totalElements = itemRepository.count();
+            if (sort.equals(SortType.ALPHA)) {
+                content = itemRepository.findAllLimitOffsetSortedByTitle(pageSize, offset);
+            } else {
+                content = itemRepository.findAllLimitOffsetSortedByPrice(pageSize, offset);
+            }
         } else {
-            content = itemRepository.findAllBySearchTermSortedByPrice(pageSize, offset, search);
-        }
+            searchPattern = "%" + search.strip() + "%";
+            totalElements = itemRepository.countBySearchTerm(searchPattern);
 
+            if (sort.equals(SortType.ALPHA)) {
+                content = itemRepository.findAllBySearchTermSortedByTitle(searchPattern, pageSize, offset);
+            } else {
+                content = itemRepository.findAllBySearchTermSortedByPrice(searchPattern, pageSize, offset);
+            }
+        }
         Flux<ItemDto> contentDto = content
-                .map(itemMapper::toDto)
-                .flatMap(this::addCartInfo);
+        .map(itemMapper::toDto)
+        .flatMap(this::addCartInfo);
 
         return Mono.zip(contentDto.collectList(), totalElements)
-                .map(tuple -> new ReactivePage<>(
-                        Flux.fromIterable(tuple.getT1()),
-                        Mono.just(tuple.getT2()),
-                        num,
-                        size))
-                .onErrorResume(error -> {
-                    return Mono.error(new RuntimeException("Ошибка получения данных"));
-                });
+        .map(tuple -> new ReactivePage<>(
+                Flux.fromIterable(tuple.getT1()),
+                Mono.just(tuple.getT2()),
+                num,
+                size));
     }
 
     private Mono<ItemDto> addCartInfo(ItemDto dto) {

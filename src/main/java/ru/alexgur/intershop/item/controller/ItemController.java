@@ -56,14 +56,5 @@ public class ItemController {
                 .modelAttribute("search", search)
                 .modelAttribute("sort", sort.toString())
                 .build());
-
-        // Вариант ниже якобы менее "реактивен". Не знаю почему!
-        //
-        // Rendering r = Rendering.view("main")
-        // .modelAttribute("paging", page)
-        // .modelAttribute("search", search)
-        // .modelAttribute("sort", sort.toString())
-        // .build();
-        // return Mono.just(r);
     }
 }
