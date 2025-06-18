@@ -24,3 +24,6 @@
 
 -- INSERT INTO items(title, description, img_path, price)
 -- VALUES ('Item 9', 'Описание item 9', '/images/item9.jpg', 900);
+
+-- INSERT INTO items(title, description, img_path, price)
+-- VALUES ('Item 1', 'Description item 1', '/images/item1.jpg', 100);
