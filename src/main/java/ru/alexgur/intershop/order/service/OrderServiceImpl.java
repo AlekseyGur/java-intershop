@@ -3,7 +3,6 @@ package ru.alexgur.intershop.order.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -23,7 +22,6 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
     private static final int MAX_ITEMS_QUANTITY = 100;
     private final OrderRepository orderRepository;
@@ -33,7 +31,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public Flux<OrderDto> getAll() {
         return orderRepository.findAllByIsPaidTrue()
                 .map(orderMapper::toDto)
@@ -42,7 +39,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Mono<OrderDto> get(Long orderId) {
         return orderRepository.findById(orderId)
                 .map(orderMapper::toDto)
@@ -51,11 +47,13 @@ public class OrderServiceImpl implements OrderService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
+    @Override
     public Mono<OrderItemDto> addItemToOrder(Long orderId, Long itemId, Integer quantity) {
         return addItemToOrderImpl(orderId, itemId, quantity)
                 .map(orderItemMapper::toDto);
     }
 
+    @Override
     public Mono<Void> removeItemFromOrder(Long orderId, Long orderItemId) {
         return orderRepository.findById(orderId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
@@ -67,12 +65,33 @@ public class OrderServiceImpl implements OrderService {
                 });
     }
 
-    @Transactional
+    @Override
     public Mono<OrderDto> buyItems() {
         return getCartOrCreateNew()
                 .flatMap(this::validateOrderIsNotEmpty)
                 .flatMap(this::validateOrderIsPaid)
                 .flatMap(this::setOrderPaid);
+    }
+
+    @Override
+    public Mono<Boolean> checkIdExist(Long id) {
+        return orderRepository.existsById(id);
+    }
+
+    @Override
+    public Mono<Void> updateCartQuantity(Long itemId, ActionType action) {
+        return getCartOrCreateNew()
+                .flatMap(order -> findOrCreateOrderItem(order, itemId))
+                .flatMap(orderItem -> {
+                    switch (action) {
+                        case PLUS -> updateQuantityPlus(orderItem);
+                        case MINUS -> updateQuantityMinus(orderItem);
+                        case DELETE -> deleteOrderItem(orderItem);
+                        default -> Mono.error(
+                                new IllegalArgumentException("Неверное действие с количеством товара"));
+                    }
+                    return Mono.empty();
+                });
     }
 
     private Mono<OrderDto> validateOrderIsNotEmpty(OrderDto order) {
@@ -94,7 +113,6 @@ public class OrderServiceImpl implements OrderService {
                 .thenReturn(order);
     }
 
-    @Transactional(readOnly = true)
     public Mono<Order> getOrderById(Long id) {
         return orderRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
@@ -110,28 +128,6 @@ public class OrderServiceImpl implements OrderService {
 
     public Mono<OrderDto> createOrder() {
         return orderRepository.save(new Order()).map(orderMapper::toDto);
-    }
-
-    @Override
-    public Mono<Boolean> checkIdExist(Long id) {
-        return orderRepository.existsById(id);
-    }
-
-    @Override
-    @Transactional
-    public Mono<Void> updateCartQuantity(Long itemId, ActionType action) {
-        return getCartOrCreateNew()
-                .flatMap(order -> findOrCreateOrderItem(order, itemId))
-                .flatMap(orderItem -> {
-                    switch (action) {
-                        case PLUS -> updateQuantityPlus(orderItem);
-                        case MINUS -> updateQuantityMinus(orderItem);
-                        case DELETE -> deleteOrderItem(orderItem);
-                        default -> Mono.error(
-                                new IllegalArgumentException("Неверное действие с количеством товара"));
-                    }
-                    return Mono.empty();
-                });
     }
 
     private Mono<OrderItem> findOrCreateOrderItem(OrderDto order, Long itemId) {
@@ -191,17 +187,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDto loadItemQuantity(OrderDto order) {
-        // List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
-        // Flux<OrderItem> items =
-        // orderItemRepository.findAllByItemIdAndOrderId(itemsIds, order.getId());
-
-        // Map<Long, Integer> quantByItemId = items.stream()
-        // .collect(Collectors.toMap(
-        // OrderItem::getId,
-        // OrderItem::getQuantity));
-
-        // order.getItems().forEach(item ->
-        // item.setQuantity(quantByItemId.getOrDefault(item.getId(), 0)));
         return order;
     }
 }
