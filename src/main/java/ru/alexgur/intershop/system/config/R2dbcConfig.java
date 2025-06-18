@@ -5,7 +5,6 @@ import org.springframework.boot.r2dbc.ConnectionFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
@@ -18,7 +17,6 @@ import io.r2dbc.spi.ConnectionFactoryOptions;
 import jakarta.annotation.PostConstruct;
 
 @Configuration
-@EnableR2dbcRepositories(basePackages = { "ru.alexgur.intershop" })
 public class R2dbcConfig {
 
     private String username;
@@ -26,6 +24,7 @@ public class R2dbcConfig {
     private String host;
     private String dbName;
     private String protocol;
+    private String containerId;
     private Integer dynamicPort;
 
     @Autowired
@@ -38,6 +37,7 @@ public class R2dbcConfig {
         password = postgresqlContainer.getPassword();
         host = postgresqlContainer.getHost();
         dbName = postgresqlContainer.getDatabaseName();
+        containerId = postgresqlContainer.getContainerId();
         protocol = "postgresql";
 
         System.out.println("Testcontainer Port: " + postgresqlContainer.getFirstMappedPort());
@@ -48,6 +48,8 @@ public class R2dbcConfig {
         System.out.println("Testcontainer Password: " + postgresqlContainer.getPassword());
         System.out.println("Testcontainer Username: " + postgresqlContainer.getUsername());
         System.out.println("Testcontainer DatabaseName: " + postgresqlContainer.getDatabaseName());
+
+        System.out.println("docker exec -it " + containerId + " psql -U " + username + " -d " + dbName);
     }
 
     @Bean
@@ -57,8 +59,7 @@ public class R2dbcConfig {
 
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("schema.sql"));
-        populator.addScript(new ClassPathResource("import.sql"));
-
+        // populator.addScript(new ClassPathResource("import.sql"));
         initializer.setDatabasePopulator(populator);
 
         return initializer;
