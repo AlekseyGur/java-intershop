@@ -30,11 +30,11 @@ public class ReactivePage<T> {
         return totalElements;
     }
 
-    public int getNumber() {
+    public int pageNumber() {
         return number;
     }
 
-    public int getSize() {
+    public int pageSize() {
         return size;
     }
 

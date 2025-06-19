@@ -52,6 +52,7 @@ public class ItemController {
         Mono<ReactivePage<ItemDto>> page = itemService.getAll(pageNumber - 1, pageSize, search, sort);
 
         return page.map(data -> Rendering.view("main")
+                .modelAttribute("items", data.getContent().buffer(3))
                 .modelAttribute("paging", data)
                 .modelAttribute("search", search)
                 .modelAttribute("sort", sort.toString())
