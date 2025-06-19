@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.order.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -34,16 +35,16 @@ public class OrderServiceImpl implements OrderService {
     public Flux<OrderDto> getAll() {
         return orderRepository.findAllByIsPaidTrue()
                 .map(orderMapper::toDto)
-                .map(this::loadItemQuantity)
-                .map(this::calculateTotalSum);
+                .flatMap(this::loadItemQuantity)
+                .flatMap(this::calculateTotalSum);
     }
 
     @Override
     public Mono<OrderDto> get(Long orderId) {
         return orderRepository.findById(orderId)
                 .map(orderMapper::toDto)
-                .map(this::loadItemQuantity)
-                .map(this::calculateTotalSum)
+                .flatMap(this::loadItemQuantity)
+                .flatMap(this::calculateTotalSum)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
@@ -121,8 +122,8 @@ public class OrderServiceImpl implements OrderService {
     public Mono<OrderDto> getCartOrCreateNew() {
         return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
                 .map(orderMapper::toDto)
-                .map(this::loadItemQuantity)
-                .map(this::calculateTotalSum)
+                .flatMap(this::loadItemQuantity)
+                .flatMap(this::calculateTotalSum)
                 .switchIfEmpty(createOrder());
     }
 
@@ -176,17 +177,30 @@ public class OrderServiceImpl implements OrderService {
                 });
     }
 
-    private OrderDto calculateTotalSum(OrderDto order) {
+    private Mono<OrderDto> calculateTotalSum(OrderDto order) {
         List<ItemDto> items = order.getItems();
+
         Double totalSum = items.isEmpty() ? 0.0
                 : items.stream()
                         .mapToDouble(x -> x.getPrice() * x.getQuantity())
                         .sum();
+
         order.setTotalSum(totalSum);
-        return order;
+
+        return Mono.just(order);
     }
 
-    private OrderDto loadItemQuantity(OrderDto order) {
-        return order;
+    private Mono<OrderDto> loadItemQuantity(OrderDto order) {
+        List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
+
+        Flux<OrderItem> items = orderItemRepository.findAllByItemIdsAndOrderId(order.getId(), itemsIds);
+
+        Mono<Map<Long, Integer>> quantByItemId = items.collectMap(OrderItem::getItemId, OrderItem::getQuantity);
+
+        return quantByItemId.map(map -> {
+            order.getItems().forEach(item -> item.setQuantity(map.getOrDefault(item.getId(), 0)));
+            return order;
+        });
+
     }
 }

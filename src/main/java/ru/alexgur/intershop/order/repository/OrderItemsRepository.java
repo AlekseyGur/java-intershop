@@ -34,6 +34,13 @@ public interface OrderItemsRepository extends R2dbcRepository<OrderItem, Long> {
             @Param("itemId") Long itemId,
             @Param("quantity") Integer quantity);
 
+    @Query("SELECT * FROM order_items " +
+            "WHERE order_id = :orderId " +
+            "AND item_id IN (:itemIds)")
+    Flux<OrderItem> findAllByItemIdsAndOrderId(
+            @Param("orderId") Long orderId,
+            @Param("itemIds") List<Long> itemIds);
+
     @Query("SELECT OrderItem e FROM order_items WHERE e.order.id = :orderId AND e.item.id IN (:itemIds)")
             Flux<OrderItem> findAllByItemIdInAndOrderId(@Param("itemIds") List<Long> itemIds,
             @Param("orderId") Long orderId);
