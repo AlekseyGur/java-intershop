@@ -1,4 +1,4 @@
-package ru.yandex.practicum.intershop;
+package ru.alexgur.intershop;
 
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
