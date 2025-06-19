@@ -5,20 +5,38 @@ logging:
   level:
     root: INFO
     org:
-      springframework: INFO
+      springframework:
+        r2dbc: INFO
+
 
 spring:
   main:
     banner-mode: off
-  
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
-  servlet:
-    multipart:
+  # liquibase:
+  #   url: jdbc:postgresql://host.docker.internal:54332/intershop
+  #   user: postgres
+  #   password: postgres
+  #   default-schema: shop
+  #   change-log: classpath:liquibase/liquibase.changelog-master.xml
+  #   driver-class-name: org.postgresql.Driver
+
+  application.name: intershop
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/intershop
+  #   url: jdbc:postgresql://host.docker.internal:54332/intershop
+    username: intershop
+    password: intershop
+    pool:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
+
+  # sql:
+  #   init:
+  #     mode: always
 
   data:
     r2dbc:
@@ -26,9 +44,21 @@ spring:
         enabled: true
 
   thymeleaf:
+    cache: false
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
     encoding: UTF-8
     servlet:
       content-type: text/html
+
+  # jpa:
+  #   properties.hibernate.generate_statistics: false
+  #   hibernate:
+  #     ddl-auto: none
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
