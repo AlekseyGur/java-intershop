@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.4.6</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>ru.alexgur.intershop</groupId>
@@ -63,9 +63,14 @@
         </dependency>
 
         <dependency>
-            <groupId>io.r2dbc</groupId>
+            <groupId>org.postgresql</groupId>
             <artifactId>r2dbc-postgresql</artifactId>
-            <version>0.8.13.RELEASE</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.r2dbc</groupId>
+            <artifactId>r2dbc-pool</artifactId>
+            <version>1.0.2.RELEASE</version>
         </dependency>
 
         <dependency>
@@ -73,25 +78,36 @@
             <artifactId>spring-data-r2dbc</artifactId>
         </dependency>
 
-        <!-- База -->
+        <!-- testcontainers -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>1.19.8</version>
+            <scope>test</scope>
         </dependency>
 
-        <!-- Реактивные потоки (mono flux) -->
-
         <dependency>
-            <groupId>org.reactivestreams</groupId>
-            <artifactId>reactive-streams</artifactId>
-            <version>1.0.4</version>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>r2dbc</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- mapstruct -->
@@ -136,7 +152,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
                 <configuration>
                     <annotationProcessorPaths>
 
@@ -149,11 +164,6 @@
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>1.5.5.Final</version>
-                        </path>
-                        <path>
-                            <groupId>org.testcontainers</groupId>
-                            <artifactId>testcontainers</artifactId>
-                            <version>1.19.8</version>
                         </path>
 
                     </annotationProcessorPaths>
