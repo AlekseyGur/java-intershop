@@ -49,7 +49,6 @@ public class ItemServiceImpl implements ItemService {
         final int offset = pageNumber * pageSize;
         final int num = pageNumber;
         final int size = pageSize;
-        String sortBy = sort.equals(SortType.ALPHA) ? "price" : "title";
 
         String searchPattern;
         Flux<Item> content;
