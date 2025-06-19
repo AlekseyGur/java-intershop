@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
-import java.util.function.Consumer;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +17,6 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.HeaderAssertions;
-import org.springframework.test.web.reactive.server.StatusAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -96,6 +92,9 @@ public class MainTest {
         assertThat(status.value(), is(HttpStatus.OK.value()));
 
         MediaType contentType = result.getResponseHeaders().getContentType();
+
+        assertNotNull(contentType);
+
         assertTrue(contentType.toString().contains(MediaType.TEXT_HTML_VALUE.toString()));
 
         String responseBody = new String(result.getResponseBodyContent(), StandardCharsets.UTF_8);
