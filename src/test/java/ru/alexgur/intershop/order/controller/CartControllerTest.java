@@ -36,7 +36,7 @@ class CartControllerTest extends BaseTest {
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueMatches("Location", "/cart.*");
+                .expectHeader().valueMatches("Location", "/cart");
 
         webTestClient.get().uri("/cart")
                 .exchange()
@@ -54,7 +54,7 @@ class CartControllerTest extends BaseTest {
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueMatches("Location", "/cart.*");
+                .expectHeader().valueMatches("Location", "/cart");
 
         webTestClient.post().uri("/cart/buy")
                 .exchange()

@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 
-@SpringBootTest
+@SpringBootTest(classes = { Main.class })
 public class BaseTest {
 
     @Autowired
