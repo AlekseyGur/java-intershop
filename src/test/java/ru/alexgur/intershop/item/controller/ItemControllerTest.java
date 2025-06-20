@@ -1,40 +1,28 @@
 package ru.alexgur.intershop.item.controller;
 
-import org.junit.jupiter.api.BeforeEach;
+import ru.alexgur.intershop.BaseTest;
+
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import ru.alexgur.intershop.TestWebConfiguration;
+@SpringBootTest
+@AutoConfigureWebTestClient
+class ItemControllerTest extends BaseTest {
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+    @Test
+    public void getHomePageLoaded() throws Exception {
+        webTestClient.get().uri("/")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
+    }
 
-class ItemControllerTest extends TestWebConfiguration {
-
-        @Autowired
-        private WebApplicationContext webApplicationContext;
-        private MockMvc mockMvc;
-
-        @BeforeEach
-        void setUp() {
-                mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        }
-
-        @Test
-        void getHomePage() throws Exception {
-                mockMvc.perform(get("/"))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("main"));
-        }
-
-        @Test
-        void getItemPage() throws Exception {
-                mockMvc.perform(get("/items/1"))
-                                .andExpect(status().isOk())
-                                .andExpect(view().name("item"));
-        }
-
+    @Test
+    public void getItemPage() throws Exception {
+        webTestClient.get().uri("/items/1")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
+    }
 }

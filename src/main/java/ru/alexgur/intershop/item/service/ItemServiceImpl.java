@@ -1,19 +1,18 @@
 package ru.alexgur.intershop.item.service;
 
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.dto.ItemNewDto;
+import ru.alexgur.intershop.item.dto.ReactivePage;
 import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.model.Item;
 import ru.alexgur.intershop.item.model.SortType;
@@ -26,72 +25,86 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
+    private final ItemMapper itemMapper;
 
     @Override
-    @Transactional
-    public ItemDto add(ItemDto itemDto) {
-        Item item = ItemMapper.toItem(itemDto);
-        return ItemMapper.toDto(itemRepository.save(item));
+    public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
+        return dto
+                .map(itemMapper::fromDto)
+                .flatMap(itemRepository::save)
+                .map(itemMapper::toDto);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ItemDto get(Long id) {
+    public Mono<ItemDto> get(Long id) {
         return itemRepository.findById(id)
-                .map(ItemMapper::toDto)
-                .map(this::addCartInfo)
-                .orElseThrow(() -> new NotFoundException("Товар с таким id не найдена"));
+                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
+                .map(itemMapper::toDto)
+                .flatMap(this::addCartInfo);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean checkIdExist(Long itemId) {
+    public Mono<Boolean> checkIdExist(Long itemId) {
         return itemRepository.existsById(itemId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<ItemDto> getAll(Pageable pageable, String search, SortType sort) {
+    public Mono<ReactivePage<ItemDto>> getAll(Integer pageNumber, Integer pageSize, String search, SortType sort) {
+        final int offset = pageNumber * pageSize;
+        final int num = pageNumber;
+        final int size = pageSize;
 
-        Sort jpaSort = switch (sort) {
-            case NO -> Sort.unsorted();
-            case ALPHA -> Sort.by("title");
-            case PRICE -> Sort.by("price");
-            default -> throw new IllegalArgumentException("Неизвестный тип сортировки");
-        };
+        String searchPattern;
+        Flux<Item> content;
+        Mono<Long> totalElements;
 
-        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), jpaSort);
-
-        Page<Item> res;
         if (search == null) {
-            res = itemRepository.findAll(pageable);
+            totalElements = itemRepository.count();
+            if (sort.equals(SortType.ALPHA)) {
+                content = itemRepository.findAllLimitOffsetSortedByTitle(pageSize, offset);
+            } else {
+                content = itemRepository.findAllLimitOffsetSortedByPrice(pageSize, offset);
+            }
         } else {
-            res = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(pageable, search);
+            searchPattern = "%" + search.strip() + "%";
+            totalElements = itemRepository.countBySearchTerm(searchPattern);
+
+            if (sort.equals(SortType.ALPHA)) {
+                content = itemRepository.findAllBySearchTermSortedByTitle(searchPattern, pageSize, offset);
+            } else {
+                content = itemRepository.findAllBySearchTermSortedByPrice(searchPattern, pageSize, offset);
+            }
         }
+        Flux<ItemDto> contentDto = content
+        .map(itemMapper::toDto)
+        .flatMap(this::addCartInfo);
 
-        return addCartInfo(ItemMapper.toDto(res));
+        return Mono.zip(contentDto.collectList(), totalElements)
+        .map(tuple -> new ReactivePage<>(
+                Flux.fromIterable(tuple.getT1()),
+                Mono.just(tuple.getT2()),
+                num,
+                size));
     }
 
-    private List<ItemDto> addCartInfo(List<ItemDto> items) {
-        Map<Long, Integer> itemsIdsInCart = orderService.getCartOrCreateNew().getItems().stream()
-                .collect(Collectors.groupingBy(
-                        ItemDto::getId,
-                        Collectors.summingInt(x -> 1)));
+    private Mono<ItemDto> addCartInfo(ItemDto dto) {
+        return orderService.getCartOrCreateNew()
+                .map(cart -> {
+                    return cart.getItems();
+                })
+                .defaultIfEmpty(Collections.emptyList())
+                .flatMap(items -> {
 
-        return items.stream()
-                .map(x -> {
-                    x.setQuantity(itemsIdsInCart.getOrDefault(x.getId(), 0));
-                    return x;
-                }).toList();
+                    Map<Long, Integer> quantByItemId = items.stream()
+                            .collect(Collectors.toMap(ItemDto::getId, ItemDto::getQuantity));
+
+                    long count = quantByItemId.getOrDefault(dto.getId(), 0);
+
+                    ItemDto newDto = new ItemDto();
+                    BeanUtils.copyProperties(dto, newDto);
+                    newDto.setQuantity(count > 0 ? (int) count : 0);
+                    return Mono.just(newDto);
+                });
     }
 
-    private ItemDto addCartInfo(ItemDto post) {
-        return addCartInfo(List.of(post)).get(0);
-    }
-
-    private Page<ItemDto> addCartInfo(Page<ItemDto> items) {
-        return new PageImpl<>(addCartInfo(items.getContent()),
-                items.getPageable(),
-                items.getTotalElements());
-    }
 }

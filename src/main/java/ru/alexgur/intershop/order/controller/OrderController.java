@@ -1,12 +1,16 @@
 package ru.alexgur.intershop.order.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.reactive.result.view.Rendering;
+
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderService;
 
 @Controller
@@ -16,15 +20,19 @@ public class OrderController {
     private final OrderService orderService;
 
     @GetMapping
-    public String getAll(Model model) {
-        model.addAttribute("orders", orderService.getAll());
-        return "orders";
+    public Mono<Rendering> getCartItems() {
+
+        Flux<OrderDto> data = orderService.getAll();
+
+        return Mono.just(Rendering.view("orders")
+                .modelAttribute("orders", data)
+                .build());
     }
 
     @GetMapping("/{orderId}")
-    public String getById(@PathVariable @Positive Long orderId, Model model) {
-        model.addAttribute("order", orderService.get(orderId));
-        return "order";
+    public Mono<Rendering> getById(@PathVariable @Positive Long orderId) {
+        return orderService.get(orderId).map(data -> Rendering.view("order")
+                .modelAttribute("order", data)
+                .build());
     }
-
 }

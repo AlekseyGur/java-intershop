@@ -1,41 +1,31 @@
 package ru.alexgur.intershop.order.mapper;
 
-import java.util.List;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-import lombok.experimental.UtilityClass;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.model.Order;
 
-@UtilityClass
-public class OrderMapper {
-    public static OrderDto toDto(Order order) {
-        OrderDto orderDto = new OrderDto();
-        orderDto.setId(order.getId());
-        orderDto.setIsPaid(order.getIsPaid());
-        orderDto.setContactEmail(order.getContactEmail());
-        orderDto.setContactPhone(order.getContactPhone());
-        orderDto.setDeliveryAddress(order.getDeliveryAddress());
-        orderDto.setItems(ItemMapper.toDto(order.getItems()));
-        return orderDto;
+@Mapper(componentModel = "spring", uses = ItemMapper.class)
+public interface OrderMapper {
+
+    @Mapping(target = "totalSum", ignore = true)
+    OrderDto toDto(Order order);
+
+    Order fromDto(OrderDto order);
+
+    default Mono<Order> fromMonoDto(Mono<OrderDto> order) {
+        return order.map(this::fromDto);
     }
 
-    public static Order toOrder(OrderDto orderDto) {
-        Order order = new Order();
-        order.setId(orderDto.getId());
-        order.setIsPaid(orderDto.getIsPaid());
-        order.setContactEmail(orderDto.getContactEmail());
-        order.setContactPhone(orderDto.getContactPhone());
-        order.setDeliveryAddress(orderDto.getDeliveryAddress());
-        order.setItems(ItemMapper.fromDto(orderDto.getItems()));
-        return order;
+    default Flux<Order> fromFluxDto(Flux<OrderDto> orders) {
+        return orders.map(this::fromDto);
     }
 
-    public static List<Order> fromDto(List<OrderDto> ordersDto) {
-        return ordersDto.stream().map(OrderMapper::toOrder).toList();
-    }
-
-    public static List<OrderDto> toDto(List<Order> orders) {
-        return orders.stream().map(OrderMapper::toDto).toList();
+    default Flux<OrderDto> toFluxDto(Flux<Order> orders) {
+        return orders.map(this::toDto);
     }
 }

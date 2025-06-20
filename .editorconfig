@@ -1,0 +1,5 @@
+[*.{java,scala,js,py}]
+upper_case_constants = true
+indent_style = space
+indent_size = 4
+

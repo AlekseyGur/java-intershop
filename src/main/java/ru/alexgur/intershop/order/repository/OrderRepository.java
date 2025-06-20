@@ -1,23 +1,21 @@
 package ru.alexgur.intershop.order.repository;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.order.model.Order;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long> {
-    Optional<Order> findFirstByIsPaidFalseOrderByIdDesc();
+public interface OrderRepository extends R2dbcRepository<Order, Long> {
+    @Query("SELECT * FROM orders WHERE is_paid = false ORDER BY id DESC LIMIT 1")
+    Mono<Order> findFirstByIsPaidFalseOrderByIdDesc();
 
-    List<Order> findAllByIsPaidTrue();
+    Flux<Order> findAllByIsPaidTrue();
 
-    @Modifying
-    @Query("UPDATE Order o SET o.isPaid = true WHERE o.id = :orderId")
-    void setIsPaid(@Param("orderId") Long orderId);
+    @Query(value = "UPDATE orders SET is_paid = true WHERE id = :orderId")
+    Mono<Void> isPaidTrue(@Param("orderId") Long orderId);
 }

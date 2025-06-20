@@ -1,5 +1,5 @@
 INSERT INTO items(title, description, img_path, price)
-VALUES ('Item 1', 'Описание item 1', '/images/item1.jpg', 100);
+VALUES ('Item 1', 'Описание item 1', '/images/item1.jpg', 100.0);
 
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 2', 'Описание item 2', '/images/item2.jpg', 200);
@@ -24,3 +24,6 @@ VALUES ('Item 8', 'Описание item 8', '/images/item8.jpg', 800);
 
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 9', 'Описание item 9', '/images/item9.jpg', 900);
+
+INSERT INTO items(title, description, img_path, price)
+VALUES ('Item 1', 'Description item 1', '/images/item1.jpg', 100);

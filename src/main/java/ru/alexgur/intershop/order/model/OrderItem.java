@@ -3,28 +3,25 @@ package ru.alexgur.intershop.order.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.alexgur.intershop.item.model.Item;
-import jakarta.persistence.*;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Getter
 @Setter
 @ToString
-@Entity
-@Table(name = "order_items")
+@Table("order_items")
 public class OrderItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column("order_id")
+    private Long orderId;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id", nullable = false)
-    private Item item;
+    @Column("item_id")
+    private Long itemId;
 
-    @Column(name = "quantity", nullable = false)
+    @Column("quantity")
     private Integer quantity;
 }

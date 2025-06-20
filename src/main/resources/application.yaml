@@ -1,30 +1,60 @@
-# Общие настройки, применяемые ко всем профилям
+# -Dspring.profiles.active=dev
 server:
   port: 8080
 
 logging:
   level:
-    root: ERROR
+    root: INFO
     org:
-      springframework: ERROR
+      springframework:
+        r2dbc: DEBUG
+        web: INFO
+        http: INFO
+        core: INFO
+      reactor:
+        netty: INFO
 
 spring:
   main:
     banner-mode: off
 
-  servlet:
-    multipart:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/db.changelog-master.yaml
+  #   url: jdbc:postgresql://host.docker.internal:54332/intershop
+  #   user: postgres
+  #   password: postgres
+  #   default-schema: shop
+  #   driver-class-name: org.postgresql.Driver
+
+  application.name: intershop
+
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/intershop
+    username: intershop
+    password: intershop
+    pool:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
 
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driverClassName: org.h2.Driver
-    username: admin
-    password: 
-  
+    url: jdbc:postgresql://localhost:5432/intershop
+    username: intershop
+    password: intershop
+    
+  # sql:
+  #   init:
+  #     mode: always
+
+  data:
+    r2dbc:
+      repositories:
+        enabled: true
+
   thymeleaf:
+    cache: false
     prefix: classpath:/templates/
     suffix: .html
     mode: HTML
@@ -32,52 +62,37 @@ spring:
     servlet:
       content-type: text/html
 
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate.ddl-auto: create
-  
-  h2:
-    console:
+  # jpa:
+  #   properties.hibernate.generate_statistics: false
+  #   hibernate:
+  #     ddl-auto: none
+
+  servlet:
+    multipart:
       enabled: true
-      path: /h2-console
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 
 ---
-# Профиль prod
-spring:
-  config:
-    activate:
-      on-profile: prod
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/myblog
-    driverClassName: org.postgresql.Driver
-    username: myblog
-    password: 
-
-upload:
-  images:
-    dir: /upload/blog/images
-    base-url: /images
-    format: jpg
-
----
-# Профиль dev
+# Профиль mvn spring-boot:run -Dspring-boot.run.profiles=dev
 spring:
   config:
     activate:
       on-profile: dev
 
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driverClassName: org.h2.Driver
-    username: admin
-    password: 
-  
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-  
-  h2:
-    console:
+  servlet:
+    multipart:
       enabled: true
-      path: /h2-console
+      max-file-size: 10MB
+      max-request-size: 10MB
+      
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/intershop
+    username: intershop
+    password: intershop
+    pool:
+      enabled: true
+
+ 
+

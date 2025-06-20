@@ -1,56 +1,65 @@
 package ru.alexgur.intershop.order.controller;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-
-import ru.alexgur.intershop.TestWebConfiguration;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.model.ActionType;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+@SpringBootTest
+@AutoConfigureWebTestClient
+class CartControllerTest extends BaseTest {
 
-class CartControllerTest extends TestWebConfiguration {
-
-    @Autowired
-    private WebApplicationContext webApplicationContext;
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    @Test
+    public void getCartItems() throws Exception {
+        webTestClient.get().uri("/cart")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
     }
 
     @Test
-    void getCartItems() throws Exception {
-        mockMvc.perform(get("/cart"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("cart"));
+    public void updateCartItemQuantity() throws Exception {
+        webTestClient.get().uri("/cart")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("action", ActionType.PLUS.toString());
+
+        webTestClient.post().uri("/cart/items/1")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(params)
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/cart");
+
+        webTestClient.get().uri("/cart")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
     }
 
     @Test
-    void updateCartItemQuantity() throws Exception {
-        mockMvc.perform(get("/cart"));
+    public void buy() throws Exception {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("action", ActionType.PLUS.toString());
 
-        mockMvc.perform(post("/cart/items/1")
-                .param("action", ActionType.PLUS.toString()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", startsWith("/cart")));
+        webTestClient.post().uri("/cart/items/1")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(params)
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/cart");
 
-        mockMvc.perform(get("/cart"));
-    }
+        webTestClient.post().uri("/cart/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/orders");
 
-    @Test
-    void buy() throws Exception {
-        mockMvc.perform(post("/cart/buy"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", startsWith("/orders/")))
-                .andExpect(header().string("Location", endsWith("?newOrder=true")));
     }
 }

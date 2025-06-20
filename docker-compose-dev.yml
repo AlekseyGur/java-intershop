@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: intershop-dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: intershop
+      POSTGRES_PASSWORD: intershop
+      POSTGRES_DB: intershop

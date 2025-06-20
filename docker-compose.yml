@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_R2DBC_URL: r2dbc:postgresql://db:5432/intershop
+    depends_on:
+      - postgres
+
+  db:
+    image: postgres:latest
+    container_name: db
+    environment:
+      POSTGRES_USER: intershop
+      POSTGRES_PASSWORD: intershop
+      POSTGRES_DB: intershop
