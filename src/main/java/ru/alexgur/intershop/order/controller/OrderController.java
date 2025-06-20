@@ -1,7 +1,6 @@
 package ru.alexgur.intershop.order.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,10 +30,8 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public Mono<Rendering> getById(@PathVariable @Positive Long orderId, Model model) {
-        Mono<OrderDto> data = orderService.get(orderId);
-
-        return Mono.just(Rendering.view("order")
+    public Mono<Rendering> getById(@PathVariable @Positive Long orderId) {
+        return orderService.get(orderId).map(data -> Rendering.view("order")
                 .modelAttribute("order", data)
                 .build());
     }

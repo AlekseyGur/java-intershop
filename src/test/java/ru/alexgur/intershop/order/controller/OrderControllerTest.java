@@ -2,17 +2,26 @@ package ru.alexgur.intershop.order.controller;
 
 import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.order.dto.OrderDto;
+import ru.alexgur.intershop.order.service.OrderServiceImpl;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
 class OrderControllerTest extends BaseTest {
+
+    @Autowired
+    private OrderServiceImpl orderServiceImpl;
 
     @Test
     public void getOrders() throws Exception {
@@ -49,14 +58,22 @@ class OrderControllerTest extends BaseTest {
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueMatches("Location", "/cart.*");
+                .expectHeader().valueMatches("Location", "/cart");
 
         webTestClient.post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/orders");
 
-        webTestClient.get().uri("/orders/1")
+        List<OrderDto> orders = orderServiceImpl.getAll().collectList().block();
+
+        assertThat(orders).isNotNull();
+
+        assertThat(orders.size()).isEqualTo(1);
+
+        Long orderId = orders.get(0).getId();
+
+        webTestClient.get().uri("/orders/" + orderId)
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
@@ -87,7 +104,7 @@ class OrderControllerTest extends BaseTest {
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueMatches("Location", "/cart*");
+                .expectHeader().valueMatches("Location", "/cart");
 
         webTestClient.get().uri("/orders")
                 .exchange()
