@@ -3,13 +3,15 @@ package ru.alexgur.intershop.item.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import ru.alexgur.intershop.MainTest;
+import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest
 @AutoConfigureWebTestClient
-public class ItemServiceImplTest extends MainTest {
+public class ItemServiceImplTest extends BaseTest {
     @Autowired
     private ItemServiceImpl itemServiceImpl;
 

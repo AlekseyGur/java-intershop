@@ -5,9 +5,7 @@ import static org.junit.Assert.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -21,14 +19,13 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 
 @SpringBootTest
-@AutoConfigureWebTestClient
-@Testcontainers
-public class MainTest {
+public class BaseTest {
 
     @Autowired
     public ReactiveWebApplicationContext reactiveWebApplicationContext;
@@ -39,21 +36,19 @@ public class MainTest {
     @Autowired
     public DatabaseClient databaseClient;
 
-    @Test
-    void testContext() {
-        assertNotNull(webTestClient);
-    }
-
-    @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
             .withDatabaseName("intershop-test")
             .withUsername("intershop-test")
             .withPassword("intershop-test");
 
+    static {
+        postgres.start();
+    }
+
     @AfterEach
     void cleanDb() {
-        databaseClient.sql("DELETE FROM order_items").fetch().rowsUpdated().block();
-        databaseClient.sql("DELETE FROM orders").fetch().rowsUpdated().block();
+        databaseClient.sql("DELETE FROM order_items").then().block();
+        databaseClient.sql("DELETE FROM orders").then().block();
     }
 
     @DynamicPropertySource
