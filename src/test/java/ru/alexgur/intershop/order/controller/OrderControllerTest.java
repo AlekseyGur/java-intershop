@@ -23,16 +23,55 @@ class OrderControllerTest extends BaseTest {
     }
 
     @Test
+    public void getWrongOrder() throws Exception {
+        webTestClient.get().uri("/cart")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
+
+        webTestClient.get().uri("/orders/999999")
+                .exchange()
+                .expectStatus().is4xxClientError();
+    }
+
+    @Test
     public void getOrderById() throws Exception {
         webTestClient.get().uri("/cart")
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
 
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("action", "PLUS");
+
+        webTestClient.post().uri("/cart/items/1")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .bodyValue(params)
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/cart.*");
+
+        webTestClient.post().uri("/cart/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/orders");
+
         webTestClient.get().uri("/orders/1")
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
+    }
+
+    @Test
+    public void cantBuyIfNoItems() throws Exception {
+        webTestClient.get().uri("/cart")
+                .exchange()
+                .expectBody()
+                .consumeWith(this::hasStatusOkAndClosedHtml);
+
+        webTestClient.post().uri("/cart/buy")
+                .exchange()
+                .expectStatus().is4xxClientError();
     }
 
     @Test

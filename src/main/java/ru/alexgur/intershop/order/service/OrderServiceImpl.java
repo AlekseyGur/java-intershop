@@ -21,6 +21,7 @@ import ru.alexgur.intershop.order.model.OrderItem;
 import ru.alexgur.intershop.order.repository.OrderItemsRepository;
 import ru.alexgur.intershop.order.repository.OrderRepository;
 import ru.alexgur.intershop.system.exception.NotFoundException;
+import ru.alexgur.intershop.system.exception.ValidationException;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(foundOrder -> {
                     if (foundOrder.getIsPaid()) {
-                        return Mono.error(new IllegalStateException("Заказ уже оплачен, редактирование невозможно"));
+                        return Mono.error(new ValidationException("Заказ уже оплачен, редактирование невозможно"));
                     }
                     return orderItemRepository.deleteById(orderItemId);
                 });
@@ -87,7 +88,7 @@ public class OrderServiceImpl implements OrderService {
                         case "MINUS" -> updateQuantityMinus(orderItem);
                         case "DELETE" -> deleteOrderItem(orderItem);
                         default -> Mono.error(
-                                new IllegalArgumentException("Неверное действие с количеством товара"));
+                                new NotFoundException("Неверное действие с количеством товара"));
                     };
                 });
     }
@@ -122,14 +123,14 @@ public class OrderServiceImpl implements OrderService {
         return Mono.just(order)
                 .filter(o -> !o.getItems().isEmpty())
                 .switchIfEmpty(
-                        Mono.error(new IllegalStateException("Заказ пустой")));
+                        Mono.error(new ValidationException("Заказ пустой")));
     }
 
     private Mono<OrderDto> validateOrderIsPaid(OrderDto order) {
         return Mono.just(order)
                 .filter(o -> !o.getIsPaid())
                 .switchIfEmpty(
-                        Mono.error(new IllegalStateException("Заказ уже оплачен")));
+                        Mono.error(new ValidationException("Заказ уже оплачен")));
     }
 
     private Mono<OrderDto> setOrderPaid(OrderDto order) {
@@ -159,14 +160,14 @@ public class OrderServiceImpl implements OrderService {
 
     private Mono<OrderItem> addItemToOrderImpl(Long orderId, Long itemId, Integer quantity) {
         return orderRepository.findById(orderId)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Заказ не найден")))
+                .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(order -> {
                     if (order.getIsPaid()) {
-                        return Mono.error(new IllegalStateException("Заказ уже оплачен, редактирование невозможно"));
+                        return Mono.error(new ValidationException("Заказ уже оплачен, редактирование невозможно"));
                     }
 
                     return itemRepository.findById(itemId)
-                            .switchIfEmpty(Mono.error(new IllegalArgumentException("Товар не найден")))
+                            .switchIfEmpty(Mono.error(new NotFoundException("Товар не найден")))
                             .flatMap(item -> {
                                 OrderItem orderItem = new OrderItem();
                                 orderItem.setOrderId(orderId);
