@@ -138,6 +138,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- db versions -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -183,6 +189,26 @@
                 </configuration>
             </plugin>
 
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>4.12.0</version>
+                <configuration>
+                    <changeLogFile>src/main/resources/liquibase/db.changelog-master.yml</changeLogFile>
+                    <outputChangeLogFile>src/main/resources/liquibase/db.changelog-master.sql</outputChangeLogFile>
+                    <url>jdbc:postgresql://localhost:5432/intershop</url>
+                    <username>intershop</username>
+                    <password>intershop</password>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.6.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
