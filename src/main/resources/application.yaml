@@ -21,12 +21,13 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
-  # liquibase:
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/db.changelog-master.yaml
   #   url: jdbc:postgresql://host.docker.internal:54332/intershop
   #   user: postgres
   #   password: postgres
   #   default-schema: shop
-  #   change-log: classpath:liquibase/liquibase.changelog-master.xml
   #   driver-class-name: org.postgresql.Driver
 
   application.name: intershop
@@ -38,6 +39,11 @@ spring:
     pool:
       enabled: true
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/intershop
+    username: intershop
+    password: intershop
+    
   # sql:
   #   init:
   #     mode: always
@@ -87,3 +93,6 @@ spring:
     password: intershop
     pool:
       enabled: true
+
+ 
+

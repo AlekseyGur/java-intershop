@@ -1,0 +1,5 @@
+databaseChangeLog:
+  - include:
+      file: classpath:liquibase/V25.6.19__init_schema.sql
+  - include:
+      file: classpath:liquibase/V25.6.20__change_id_to_uuid.sql
