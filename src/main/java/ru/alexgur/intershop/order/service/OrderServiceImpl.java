@@ -3,12 +3,14 @@ package ru.alexgur.intershop.order.service;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.repository.ItemRepository;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.dto.OrderItemDto;
@@ -29,21 +31,18 @@ public class OrderServiceImpl implements OrderService {
     private final ItemRepository itemRepository;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
+    private final ItemMapper itemMapper;
 
     @Override
     public Flux<OrderDto> getAll() {
         return orderRepository.findAllByIsPaidTrue()
-                .map(orderMapper::toDto)
-                .flatMap(this::loadItemQuantity)
-                .flatMap(this::calculateTotalSum);
+                .flatMap(this::convertOrderToOrderDto);
     }
 
     @Override
     public Mono<OrderDto> get(Long orderId) {
         return orderRepository.findById(orderId)
-                .map(orderMapper::toDto)
-                .flatMap(this::loadItemQuantity)
-                .flatMap(this::calculateTotalSum)
+                .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
@@ -83,16 +82,40 @@ public class OrderServiceImpl implements OrderService {
         return getCartOrCreateNew()
                 .flatMap(order -> findOrCreateOrderItem(order, itemId))
                 .flatMap(orderItem -> {
-                    System.out.println(orderItem.getId());
-                    switch (action.toUpperCase()) {
+                    return switch (action.toUpperCase()) {
                         case "PLUS" -> updateQuantityPlus(orderItem);
                         case "MINUS" -> updateQuantityMinus(orderItem);
                         case "DELETE" -> deleteOrderItem(orderItem);
                         default -> Mono.error(
                                 new IllegalArgumentException("Неверное действие с количеством товара"));
-                    }
-                    return Mono.empty();
+                    };
                 });
+    }
+
+    private Mono<Void> updateQuantityPlus(OrderItem orderItem) {
+        if (orderItem.getQuantity() < MAX_ITEMS_QUANTITY) {
+            orderItem.setQuantity(orderItem.getQuantity() + 1);
+            return orderItemRepository.quantity(
+                    orderItem.getQuantity(),
+                    orderItem.getOrderId(),
+                    orderItem.getItemId());
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> updateQuantityMinus(OrderItem orderItem) {
+        if (orderItem.getQuantity() > 1) {
+            orderItem.setQuantity(orderItem.getQuantity() - 1);
+            return orderItemRepository.save(orderItem).then();
+        } else if (orderItem.getQuantity() == 1) {
+            return orderItemRepository.delete(orderItem);
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> deleteOrderItem(OrderItem orderItem) {
+        orderItemRepository.delete(orderItem);
+        return Mono.empty();
     }
 
     private Mono<OrderDto> validateOrderIsNotEmpty(OrderDto order) {
@@ -121,9 +144,7 @@ public class OrderServiceImpl implements OrderService {
 
     public Mono<OrderDto> getCartOrCreateNew() {
         return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
-                .map(orderMapper::toDto)
-                .flatMap(this::loadItemQuantity)
-                .flatMap(this::calculateTotalSum)
+                .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(createOrder());
     }
 
@@ -134,26 +155,6 @@ public class OrderServiceImpl implements OrderService {
     private Mono<OrderItem> findOrCreateOrderItem(OrderDto order, Long itemId) {
         return orderItemRepository.findByOrderIdAndItemId(order.getId(), itemId)
                 .switchIfEmpty(addItemToOrderImpl(order.getId(), itemId, 0));
-    }
-
-    private void updateQuantityPlus(OrderItem orderItem) {
-        if (orderItem.getQuantity() < MAX_ITEMS_QUANTITY) {
-            orderItem.setQuantity(orderItem.getQuantity() + 1);
-            orderItemRepository.save(orderItem);
-        }
-    }
-
-    private void updateQuantityMinus(OrderItem orderItem) {
-        if (orderItem.getQuantity() > 1) {
-            orderItem.setQuantity(orderItem.getQuantity() - 1);
-            orderItemRepository.save(orderItem);
-        } else if (orderItem.getQuantity() == 1) {
-            orderItemRepository.delete(orderItem);
-        }
-    }
-
-    private void deleteOrderItem(OrderItem orderItem) {
-        orderItemRepository.delete(orderItem);
     }
 
     private Mono<OrderItem> addItemToOrderImpl(Long orderId, Long itemId, Integer quantity) {
@@ -176,33 +177,39 @@ public class OrderServiceImpl implements OrderService {
                 });
     }
 
-    private Mono<OrderDto> calculateTotalSum(OrderDto order) {
-        List<ItemDto> items = order.getItems();
+    private Mono<OrderDto> convertOrderToOrderDto(Order order) {
+        Flux<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
 
-        Double totalSum = items.isEmpty() ? 0.0
-                : items.stream()
-                        .mapToDouble(x -> x.getPrice() * x.getQuantity())
-                        .sum();
-
-        order.setTotalSum(totalSum);
-
-        return Mono.just(order);
-    }
-
-    private Mono<OrderDto> loadItemQuantity(OrderDto order) {
-        List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
-
-        if (itemsIds.isEmpty()) {
-            return Mono.just(order);
-        }
-        Flux<OrderItem> items = orderItemRepository.findAllByItemIdsAndOrderId(order.getId(), itemsIds);
+        Mono<List<Long>> itemsIds = items.map(OrderItem::getItemId).collectList();
 
         Mono<Map<Long, Integer>> quantByItemId = items.collectMap(OrderItem::getItemId, OrderItem::getQuantity);
 
-        return quantByItemId.map(map -> {
-            order.getItems().forEach(item -> item.setQuantity(map.getOrDefault(item.getId(), 0)));
-            return order;
-        });
+        Mono<List<ItemDto>> itemsDtos = itemsIds.flatMap(
+                ids -> {
+                    if (ids.isEmpty()) {
+                        return Mono.just(List.of());
+                    }
+                    return itemRepository.findAllByIdIn(ids).map(itemMapper::toDto).collectList();
+                });
 
+        return Mono.zip(Mono.just(order), itemsDtos, quantByItemId).map(tuple -> {
+            Order originalOrder = tuple.getT1();
+            List<ItemDto> itemsList = tuple.getT2();
+            Map<Long, Integer> quantities = tuple.getT3();
+
+
+            OrderDto dto = new OrderDto();
+            BeanUtils.copyProperties(originalOrder, dto);
+
+            if (!itemsList.isEmpty()) {
+                itemsList.forEach(x -> x.setQuantity(quantities.getOrDefault(x.getId(), 0)));
+                dto.setItems(itemsList);
+                dto.setTotalSum(itemsList.isEmpty() ? 0.0
+                        : itemsList.stream()
+                                .mapToDouble(x -> x.getPrice() * x.getQuantity())
+                                .sum());
+            }
+            return dto;
+        });
     }
 }

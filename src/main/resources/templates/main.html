@@ -71,7 +71,7 @@
                     </tr>
                     <tr>
                         <td>
-                            <form th:action="${'/cart/items/'+item.getId()}" method="post">
+                            <form th:action="${'/cart/items/'+item.getId()}" method="post" enctype="multipart/form-data">
                                 <button name="action" value="minus">-</button>
                                 <span th:text="${item.getQuantity()}"></span>
                                 <button name="action" value="plus">+</button>

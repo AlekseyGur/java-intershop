@@ -7,7 +7,7 @@ logging:
     root: INFO
     org:
       springframework:
-        r2dbc: INFO
+        r2dbc: DEBUG
         web: INFO
         http: INFO
         core: INFO

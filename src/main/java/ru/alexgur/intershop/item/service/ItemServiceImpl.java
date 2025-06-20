@@ -1,6 +1,10 @@
 package ru.alexgur.intershop.item.service;
 
 import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -85,14 +89,21 @@ public class ItemServiceImpl implements ItemService {
 
     private Mono<ItemDto> addCartInfo(ItemDto dto) {
         return orderService.getCartOrCreateNew()
-                .map(cart -> cart.getItems())
+                .map(cart -> {
+                    return cart.getItems();
+                })
                 .defaultIfEmpty(Collections.emptyList())
-                .map(items -> {
-                    long count = items.stream()
-                            .filter(i -> i.getId().equals(dto.getId()))
-                            .count();
-                    dto.setQuantity(count > 0 ? (int) count : 0);
-                    return dto;
+                .flatMap(items -> {
+
+                    Map<Long, Integer> quantByItemId = items.stream()
+                            .collect(Collectors.toMap(ItemDto::getId, ItemDto::getQuantity));
+
+                    long count = quantByItemId.getOrDefault(dto.getId(), 0);
+
+                    ItemDto newDto = new ItemDto();
+                    BeanUtils.copyProperties(dto, newDto);
+                    newDto.setQuantity(count > 0 ? (int) count : 0);
+                    return Mono.just(newDto);
                 });
     }
 

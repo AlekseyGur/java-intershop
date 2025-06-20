@@ -4,10 +4,12 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import ru.alexgur.intershop.item.dto.ItemDto;
 
 @Getter
 @Setter
+@ToString
 public class OrderDto {
     private Long id;
     private Boolean isPaid = false;

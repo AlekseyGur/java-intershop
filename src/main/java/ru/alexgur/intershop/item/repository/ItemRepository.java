@@ -1,5 +1,7 @@
 package ru.alexgur.intershop.item.repository;
 
+import java.util.List;
+
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.query.Param;
@@ -47,4 +49,7 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
     Flux<Item> findAllLimitOffsetSortedByPrice(
             @Param("limit") Integer limit,
             @Param("offset") Integer offset);
+
+    @Query("SELECT * FROM items WHERE id IN (:ids)")
+    Flux<Item> findAllByIdIn(@Param("ids") List<Long> ids);
 }

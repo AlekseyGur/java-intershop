@@ -1,18 +1,14 @@
 package ru.alexgur.intershop.order.controller;
 
-import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.reactive.result.view.Rendering;
 
 import jakarta.validation.constraints.Positive;
@@ -45,14 +41,13 @@ public class CartController {
             @PathVariable @Positive Long id,
             @RequestPart("action") String action) {
         return orderService.updateCartQuantity(id, action)
-                .thenReturn("/cart");
+                .thenReturn("redirect:/cart");
     }
 
     @PostMapping("/buy")
-    public Mono<ServerResponse> buyItems(Model model) {
+    public Mono<String> buyItems() {
         return orderService.buyItems()
-                .flatMap(order -> ServerResponse.seeOther(URI.create("/orders/" + order.getId() + "?newOrder=true"))
-                        .build());
+                .thenReturn("redirect:/orders");
     }
 
 }

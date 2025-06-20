@@ -30,9 +30,9 @@ public interface OrderItemsRepository extends R2dbcRepository<OrderItem, Long> {
     @Query("UPDATE order_items SET quantity = :quantity " +
             "WHERE order_id = :orderId AND item_id = :itemId")
     Mono<Void> quantity(
-            @Param("orderId") Long orderId,
-            @Param("itemId") Long itemId,
-            @Param("quantity") Integer quantity);
+            @Param("quantity") Integer quantity,
+                    @Param("orderId") Long orderId,
+            @Param("itemId") Long itemId);
 
     @Query("SELECT * FROM order_items " +
             "WHERE order_id = :orderId " +
