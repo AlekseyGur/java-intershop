@@ -46,9 +46,9 @@ public class MainTest {
 
     @Container
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
-            .withDatabaseName("intershop")
-            .withUsername("intershop")
-            .withPassword("intershop");
+            .withDatabaseName("intershop-test")
+            .withUsername("intershop-test")
+            .withPassword("intershop-test");
 
     @AfterEach
     void cleanDb() {
