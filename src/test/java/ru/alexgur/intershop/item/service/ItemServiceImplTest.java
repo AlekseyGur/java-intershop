@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @AutoConfigureWebTestClient
 public class ItemServiceImplTest extends BaseTest {
+
     @Autowired
     private ItemServiceImpl itemServiceImpl;
 
@@ -19,10 +20,19 @@ public class ItemServiceImplTest extends BaseTest {
     void testGet() {
         ItemDto item = itemServiceImpl.get(1L).block();
 
+        assertThat(item).isNotNull();
+
         assertThat(item)
-                .isNotNull()
                 .withFailMessage("Созданной записи должен был быть присвоен ID")
                 .extracting(ItemDto::getId)
                 .isNotNull();
     }
+
+    @Test
+    void testCheckItemExistById() {
+        Boolean res = itemServiceImpl.checkIdExist(1L).block();
+
+        assertThat(res).isNotNull();
+    }
+
 }

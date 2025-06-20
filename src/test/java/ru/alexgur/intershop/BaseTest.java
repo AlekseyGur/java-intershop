@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
@@ -44,6 +45,7 @@ public class BaseTest {
     }
 
     @AfterEach
+    @BeforeEach
     void cleanDb() {
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
