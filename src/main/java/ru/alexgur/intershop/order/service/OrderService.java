@@ -2,7 +2,6 @@ package ru.alexgur.intershop.order.service;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.dto.OrderItemDto;
 
@@ -11,7 +10,7 @@ public interface OrderService {
 
     Mono<OrderDto> get(Long id);
 
-    Mono<Void> updateCartQuantity(Long itemId, ActionType action);
+    Mono<Void> updateCartQuantity(Long itemId, String action);
 
     Mono<OrderDto> getCartOrCreateNew();
 

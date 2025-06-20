@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
-import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.item.repository.ItemRepository;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.dto.OrderItemDto;
@@ -80,14 +79,15 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<Void> updateCartQuantity(Long itemId, ActionType action) {
+    public Mono<Void> updateCartQuantity(Long itemId, String action) {
         return getCartOrCreateNew()
                 .flatMap(order -> findOrCreateOrderItem(order, itemId))
                 .flatMap(orderItem -> {
-                    switch (action) {
-                        case PLUS -> updateQuantityPlus(orderItem);
-                        case MINUS -> updateQuantityMinus(orderItem);
-                        case DELETE -> deleteOrderItem(orderItem);
+                    System.out.println(orderItem.getId());
+                    switch (action.toUpperCase()) {
+                        case "PLUS" -> updateQuantityPlus(orderItem);
+                        case "MINUS" -> updateQuantityMinus(orderItem);
+                        case "DELETE" -> deleteOrderItem(orderItem);
                         default -> Mono.error(
                                 new IllegalArgumentException("Неверное действие с количеством товара"));
                     }
@@ -136,25 +136,24 @@ public class OrderServiceImpl implements OrderService {
                 .switchIfEmpty(addItemToOrderImpl(order.getId(), itemId, 0));
     }
 
-    private Mono<Void> updateQuantityPlus(OrderItem orderItem) {
-        return Mono.just(orderItem)
-                .filter(item -> item.getQuantity() < MAX_ITEMS_QUANTITY)
-                .doOnNext(item -> item.setQuantity(item.getQuantity() + 1))
-                .flatMap(orderItemRepository::save)
-                .then();
+    private void updateQuantityPlus(OrderItem orderItem) {
+        if (orderItem.getQuantity() < MAX_ITEMS_QUANTITY) {
+            orderItem.setQuantity(orderItem.getQuantity() + 1);
+            orderItemRepository.save(orderItem);
+        }
     }
 
-    private Mono<Void> updateQuantityMinus(OrderItem orderItem) {
-        return Mono.just(orderItem)
-                .filter(item -> item.getQuantity() > 1)
-                .doOnNext(item -> item.setQuantity(item.getQuantity() - 1))
-                .flatMap(orderItemRepository::save)
-                .switchIfEmpty(Mono.fromRunnable(() -> orderItemRepository.delete(orderItem)))
-                .then();
+    private void updateQuantityMinus(OrderItem orderItem) {
+        if (orderItem.getQuantity() > 1) {
+            orderItem.setQuantity(orderItem.getQuantity() - 1);
+            orderItemRepository.save(orderItem);
+        } else if (orderItem.getQuantity() == 1) {
+            orderItemRepository.delete(orderItem);
+        }
     }
 
-    private Mono<Void> deleteOrderItem(OrderItem orderItem) {
-        return Mono.fromRunnable(() -> orderItemRepository.delete(orderItem));
+    private void deleteOrderItem(OrderItem orderItem) {
+        orderItemRepository.delete(orderItem);
     }
 
     private Mono<OrderItem> addItemToOrderImpl(Long orderId, Long itemId, Integer quantity) {
@@ -193,6 +192,9 @@ public class OrderServiceImpl implements OrderService {
     private Mono<OrderDto> loadItemQuantity(OrderDto order) {
         List<Long> itemsIds = order.getItems().stream().map(ItemDto::getId).toList();
 
+        if (itemsIds.isEmpty()) {
+            return Mono.just(order);
+        }
         Flux<OrderItem> items = orderItemRepository.findAllByItemIdsAndOrderId(order.getId(), itemsIds);
 
         Mono<Map<Long, Integer>> quantByItemId = items.collectMap(OrderItem::getItemId, OrderItem::getQuantity);

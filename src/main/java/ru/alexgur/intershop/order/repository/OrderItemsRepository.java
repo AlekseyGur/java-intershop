@@ -18,17 +18,17 @@ public interface OrderItemsRepository extends R2dbcRepository<OrderItem, Long> {
     @Query("SELECT item_id AS key, SUM(quantity) AS value FROM order_items WHERE item_id IN(:itemIds) AND order_id=:orderId GROUP BY item_id")
     Mono<Map<Long, Integer>> findQuantitiesByItemIdInAndOrderId(List<Long> itemIds, Long orderId);
 
-    @Query("SELECT OrderItem e FROM order_items WHERE e.order_id=:orderId")
+    @Query("SELECT * FROM order_items WHERE order_id=:orderId")
     Flux<OrderItem> findByOrderId(Long orderId);
 
-    @Query("SELECT OrderItem e FROM order_items WHERE e.order_id=:orderId AND e.item_id=:itemId LIMIT 1")
+    @Query("SELECT * FROM order_items WHERE order_id=:orderId AND item_id=:itemId LIMIT 1")
     Mono<OrderItem> findByOrderIdAndItemId(Long orderId, Long itemId);
 
     @Query("DELETE FROM order_items WHERE order_id=:orderId AND item_id=:itemId")
     Mono<Void> deleteByOrderIdAndItemId(Long orderId, Long itemId);
 
     @Query("UPDATE order_items SET quantity = :quantity " +
-            "WHERE order.id = :orderId AND item.id = :itemId")
+            "WHERE order_id = :orderId AND item_id = :itemId")
     Mono<Void> quantity(
             @Param("orderId") Long orderId,
             @Param("itemId") Long itemId,
@@ -41,7 +41,7 @@ public interface OrderItemsRepository extends R2dbcRepository<OrderItem, Long> {
             @Param("orderId") Long orderId,
             @Param("itemIds") List<Long> itemIds);
 
-    @Query("SELECT OrderItem e FROM order_items WHERE e.order.id = :orderId AND e.item.id IN (:itemIds)")
+    @Query("SELECT * FROM order_items WHERE order_id = :orderId AND item_id IN (:itemIds)")
             Flux<OrderItem> findAllByItemIdInAndOrderId(@Param("itemIds") List<Long> itemIds,
             @Param("orderId") Long orderId);
 }
