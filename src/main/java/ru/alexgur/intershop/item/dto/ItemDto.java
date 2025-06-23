@@ -1,5 +1,7 @@
 package ru.alexgur.intershop.item.dto;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -10,7 +12,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class ItemDto {
-    private Long id;
+    private UUID id;
 
     private String title;
 

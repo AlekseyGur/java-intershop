@@ -18,7 +18,9 @@ public class ItemServiceImplTest extends BaseTest {
 
     @Test
     void testGet() {
-        ItemDto item = itemServiceImpl.get(1L).block();
+        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().blockFirst();
+
+        ItemDto item = itemServiceImpl.get(savedItem.getId()).block();
 
         assertThat(item).isNotNull();
 
@@ -30,7 +32,9 @@ public class ItemServiceImplTest extends BaseTest {
 
     @Test
     void testCheckItemExistById() {
-        Boolean res = itemServiceImpl.checkIdExist(1L).block();
+        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().blockFirst();
+
+        Boolean res = itemServiceImpl.checkIdExist(savedItem.getId()).block();
 
         assertThat(res).isNotNull();
     }

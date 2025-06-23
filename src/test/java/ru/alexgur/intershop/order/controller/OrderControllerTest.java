@@ -1,12 +1,16 @@
 package ru.alexgur.intershop.order.controller;
 
 import ru.alexgur.intershop.BaseTest;
+import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderServiceImpl;
 
 import java.util.List;
+import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -22,6 +26,17 @@ class OrderControllerTest extends BaseTest {
 
     @Autowired
     private OrderServiceImpl orderServiceImpl;
+
+    @Autowired
+    private ItemServiceImpl itemServiceImpl;
+
+    UUID firstSavedItemId;
+
+    @BeforeEach
+    public void getFirstSavedItemId() {
+        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().blockFirst();
+        firstSavedItemId = savedItem.getId();
+    }
 
     @Test
     public void getOrders() throws Exception {
@@ -53,7 +68,7 @@ class OrderControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", "PLUS");
 
-        webTestClient.post().uri("/cart/items/1")
+        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
@@ -71,9 +86,7 @@ class OrderControllerTest extends BaseTest {
 
         assertThat(orders.size()).isEqualTo(1);
 
-        Long orderId = orders.get(0).getId();
-
-        webTestClient.get().uri("/orders/" + orderId)
+        webTestClient.get().uri("/orders/" + orders.get(0).getId())
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
@@ -99,7 +112,7 @@ class OrderControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/1")
+        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()

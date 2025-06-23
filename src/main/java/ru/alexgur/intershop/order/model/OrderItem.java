@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.UUID;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,13 +16,13 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("order_items")
 public class OrderItem {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("order_id")
-    private Long orderId;
+    private UUID orderId;
 
     @Column("item_id")
-    private Long itemId;
+    private UUID itemId;
 
     @Column("quantity")
     private Integer quantity;

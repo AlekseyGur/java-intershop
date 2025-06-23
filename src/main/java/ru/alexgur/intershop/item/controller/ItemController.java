@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.item.controller;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import ru.alexgur.intershop.item.dto.ReactivePage;
 import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemService;
 import ru.alexgur.intershop.order.service.OrderService;
+import ru.alexgur.intershop.system.valid.ValidUUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -37,7 +39,7 @@ public class ItemController {
 
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<String> updateCartItemQuantity(
-            @PathVariable @Positive Long id,
+            @PathVariable @ValidUUID UUID id,
             @RequestPart("action") String action) {
         return orderService.updateCartQuantity(id, action)
                 .thenReturn("redirect:/items/" + id);
@@ -52,7 +54,7 @@ public class ItemController {
     }
 
     @GetMapping("/items/{id}")
-    public Mono<Rendering> getItem(@PathVariable @Positive Long id) {
+    public Mono<Rendering> getItem(@PathVariable @ValidUUID UUID id) {
         return itemService.get(id).map(data -> Rendering.view("item")
                 .modelAttribute("item", data)
                 .build());

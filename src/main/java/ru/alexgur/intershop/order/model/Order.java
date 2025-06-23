@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.UUID;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,7 +16,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table(name = "orders")
 public class Order {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("is_paid")
     private Boolean isPaid = false;

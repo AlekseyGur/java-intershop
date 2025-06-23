@@ -2,6 +2,7 @@ package ru.alexgur.intershop.order.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,9 @@ import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.repository.ItemRepository;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.dto.OrderItemDto;
-import ru.alexgur.intershop.order.model.Order;
 import ru.alexgur.intershop.order.mapper.OrderItemMapper;
 import ru.alexgur.intershop.order.mapper.OrderMapper;
+import ru.alexgur.intershop.order.model.Order;
 import ru.alexgur.intershop.order.model.OrderItem;
 import ru.alexgur.intershop.order.repository.OrderItemsRepository;
 import ru.alexgur.intershop.order.repository.OrderRepository;
@@ -41,20 +42,20 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<OrderDto> get(Long orderId) {
+    public Mono<OrderDto> get(UUID orderId) {
         return orderRepository.findById(orderId)
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
     @Override
-    public Mono<OrderItemDto> addItemToOrder(Long orderId, Long itemId, Integer quantity) {
+    public Mono<OrderItemDto> addItemToOrder(UUID orderId, UUID itemId, Integer quantity) {
         return addItemToOrderImpl(orderId, itemId, quantity)
                 .map(orderItemMapper::toDto);
     }
 
     @Override
-    public Mono<Void> removeItemFromOrder(Long orderId, Long orderItemId) {
+    public Mono<Void> removeItemFromOrder(UUID orderId, UUID orderItemId) {
         return orderRepository.findById(orderId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(foundOrder -> {
@@ -74,12 +75,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<Boolean> checkIdExist(Long id) {
+    public Mono<Boolean> checkIdExist(UUID id) {
         return orderRepository.existsById(id);
     }
 
     @Override
-    public Mono<Void> updateCartQuantity(Long itemId, String action) {
+    public Mono<Void> updateCartQuantity(UUID itemId, String action) {
         return getCartOrCreateNew()
                 .flatMap(order -> findOrCreateOrderItem(order, itemId))
                 .flatMap(orderItem -> {
@@ -138,7 +139,7 @@ public class OrderServiceImpl implements OrderService {
                 .thenReturn(order);
     }
 
-    public Mono<Order> getOrderById(Long id) {
+    public Mono<Order> getOrderById(UUID id) {
         return orderRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
@@ -153,12 +154,12 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.save(new Order()).map(orderMapper::toDto);
     }
 
-    private Mono<OrderItem> findOrCreateOrderItem(OrderDto order, Long itemId) {
+    private Mono<OrderItem> findOrCreateOrderItem(OrderDto order, UUID itemId) {
         return orderItemRepository.findByOrderIdAndItemId(order.getId(), itemId)
                 .switchIfEmpty(addItemToOrderImpl(order.getId(), itemId, 0));
     }
 
-    private Mono<OrderItem> addItemToOrderImpl(Long orderId, Long itemId, Integer quantity) {
+    private Mono<OrderItem> addItemToOrderImpl(UUID orderId, UUID itemId, Integer quantity) {
         return orderRepository.findById(orderId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(order -> {
@@ -181,9 +182,9 @@ public class OrderServiceImpl implements OrderService {
     private Mono<OrderDto> convertOrderToOrderDto(Order order) {
         Flux<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
 
-        Mono<List<Long>> itemsIds = items.map(OrderItem::getItemId).collectList();
+        Mono<List<UUID>> itemsIds = items.map(OrderItem::getItemId).collectList();
 
-        Mono<Map<Long, Integer>> quantByItemId = items.collectMap(OrderItem::getItemId, OrderItem::getQuantity);
+        Mono<Map<UUID, Integer>> quantByItemId = items.collectMap(OrderItem::getItemId, OrderItem::getQuantity);
 
         Mono<List<ItemDto>> itemsDtos = itemsIds.flatMap(
                 ids -> {
@@ -196,7 +197,7 @@ public class OrderServiceImpl implements OrderService {
         return Mono.zip(Mono.just(order), itemsDtos, quantByItemId).map(tuple -> {
             Order originalOrder = tuple.getT1();
             List<ItemDto> itemsList = tuple.getT2();
-            Map<Long, Integer> quantities = tuple.getT3();
+            Map<UUID, Integer> quantities = tuple.getT3();
 
 
             OrderDto dto = new OrderDto();

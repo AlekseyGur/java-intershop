@@ -2,6 +2,7 @@ package ru.alexgur.intershop.item.service;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -36,7 +37,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Mono<ItemDto> get(Long id) {
+    public Mono<ItemDto> get(UUID id) {
         return itemRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
                 .map(itemMapper::toDto)
@@ -44,7 +45,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Mono<Boolean> checkIdExist(Long itemId) {
+    public Mono<Boolean> checkIdExist(UUID itemId) {
         return itemRepository.existsById(itemId);
     }
 
@@ -53,6 +54,9 @@ public class ItemServiceImpl implements ItemService {
         final int offset = pageNumber * pageSize;
         final int num = pageNumber;
         final int size = pageSize;
+        if (sort == null) {
+            sort = SortType.ALPHA;
+        }
 
         String searchPattern;
         Flux<Item> content;
@@ -95,7 +99,7 @@ public class ItemServiceImpl implements ItemService {
                 .defaultIfEmpty(Collections.emptyList())
                 .flatMap(items -> {
 
-                    Map<Long, Integer> quantByItemId = items.stream()
+                    Map<UUID, Integer> quantByItemId = items.stream()
                             .collect(Collectors.toMap(ItemDto::getId, ItemDto::getQuantity));
 
                     long count = quantByItemId.getOrDefault(dto.getId(), 0);

@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.order.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +12,7 @@ import ru.alexgur.intershop.item.dto.ItemDto;
 @Setter
 @ToString
 public class OrderDto {
-    private Long id;
+    private UUID id;
     private Boolean isPaid = false;
     private List<ItemDto> items = List.of();
     private String deliveryAddress;

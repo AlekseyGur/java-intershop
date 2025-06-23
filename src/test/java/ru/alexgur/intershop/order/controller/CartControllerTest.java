@@ -1,17 +1,34 @@
 package ru.alexgur.intershop.order.controller;
 
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import ru.alexgur.intershop.BaseTest;
+import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.item.service.ItemServiceImpl;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
 class CartControllerTest extends BaseTest {
+
+    @Autowired
+    private ItemServiceImpl itemServiceImpl;
+
+    UUID firstSavedItemId;
+
+    @BeforeEach
+    public void getFirstSavedItemId() {
+        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().blockFirst();
+        firstSavedItemId = savedItem.getId();
+    }
 
     @Test
     public void getCartItems() throws Exception {
@@ -31,7 +48,7 @@ class CartControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/1")
+        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
@@ -49,7 +66,7 @@ class CartControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/1")
+        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()

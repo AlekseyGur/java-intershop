@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.item.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
@@ -13,7 +14,7 @@ import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.model.Item;
 
 @Repository
-public interface ItemRepository extends R2dbcRepository<Item, Long> {
+public interface ItemRepository extends R2dbcRepository<Item, UUID> {
 
     @Query("SELECT * FROM items " +
             "WHERE title ILIKE :search " +
@@ -51,5 +52,5 @@ public interface ItemRepository extends R2dbcRepository<Item, Long> {
             @Param("offset") Integer offset);
 
     @Query("SELECT * FROM items WHERE id IN (:ids)")
-    Flux<Item> findAllByIdIn(@Param("ids") List<Long> ids);
+    Flux<Item> findAllByIdIn(@Param("ids") List<UUID> ids);
 }

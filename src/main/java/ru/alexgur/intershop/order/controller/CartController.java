@@ -1,6 +1,7 @@
 package ru.alexgur.intershop.order.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -11,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.reactive.result.view.Rendering;
 
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.order.service.OrderService;
+import ru.alexgur.intershop.system.valid.ValidUUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -38,8 +39,8 @@ public class CartController {
 
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<String> updateCartItemQuantity(
-            @PathVariable @Positive Long id,
-            @RequestPart("action") String action) {
+            @PathVariable @ValidUUID UUID id,
+                    @RequestPart("action") String action) {
         return orderService.updateCartQuantity(id, action)
                 .thenReturn("redirect:/cart");
     }

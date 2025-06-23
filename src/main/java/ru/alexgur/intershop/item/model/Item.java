@@ -1,5 +1,7 @@
 package ru.alexgur.intershop.item.model;
 
+import java.util.UUID;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,7 +16,7 @@ import lombok.ToString;
 @Table("items")
 public class Item {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("title")
     private String title;
