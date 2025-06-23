@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ErrorResponse {
+public class ResponseEntity {
     public String error;
 }
