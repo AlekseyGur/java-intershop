@@ -21,6 +21,9 @@ spring:
   main:
     banner-mode: off
 
+  cache:
+    type: redis
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
@@ -55,6 +58,12 @@ spring:
     r2dbc:
       repositories:
         enabled: true
+
+    redis:
+      repositories:
+        enabled: false
+      host: localhost
+      port: 6379
 
   thymeleaf:
     cache: false
@@ -112,3 +121,10 @@ spring:
     password: intershop
     pool:
       enabled: true
+
+  data:
+    redis:
+      repositories:
+        enabled: false
+      host: localhost
+      port: 6379

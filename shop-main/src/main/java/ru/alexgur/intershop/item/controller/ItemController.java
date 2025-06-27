@@ -20,10 +20,11 @@ import org.springframework.web.reactive.result.view.Rendering;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.dto.ItemNewDto;
-import ru.alexgur.intershop.item.dto.ReactivePage;
+import ru.alexgur.intershop.item.dto.SimplePage;
 import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemService;
 import ru.alexgur.intershop.order.service.OrderService;
@@ -70,11 +71,11 @@ public class ItemController {
             @RequestParam(defaultValue = "10") @Positive Integer pageSize,
             @RequestParam(defaultValue = "1") @Positive Integer pageNumber) {
 
-        Mono<ReactivePage<ItemDto>> page = itemService.getAll(pageNumber - 1, pageSize, search, sort)
-                .flatMap(itemService::addCartInfo);
+            Mono<SimplePage<ItemDto>> page = itemService.getAll(pageNumber - 1,
+                            pageSize, search, sort).flatMap(itemService::addCartInfo);
 
         return page.map(data -> Rendering.view("main")
-                .modelAttribute("items", data.getContent().buffer(3))
+                        .modelAttribute("items", Flux.fromIterable(data.getContent()).buffer(3))
                 .modelAttribute("paging", data)
                 .modelAttribute("search", search)
                 .modelAttribute("sort", sort.toString())

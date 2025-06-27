@@ -6,6 +6,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.Cache.ValueWrapper;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -13,7 +16,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.dto.ItemNewDto;
-import ru.alexgur.intershop.item.dto.ReactivePage;
+import ru.alexgur.intershop.item.dto.SimplePage;
 import ru.alexgur.intershop.item.mapper.ItemMapper;
 import ru.alexgur.intershop.item.model.Item;
 import ru.alexgur.intershop.item.model.SortType;
@@ -27,20 +30,20 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
     private final ItemMapper itemMapper;
+    private final CacheManager cacheManager;
 
     @Override
     public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
-        return dto
-                .map(itemMapper::fromDto)
+        return dto.map(itemMapper::fromDto)
                 .flatMap(itemRepository::save)
                 .map(itemMapper::toDto);
     }
 
     @Override
+    @Cacheable(value = "items", key = "#id.toString()")
     public Mono<ItemDto> get(UUID id) {
         return itemRepository.findById(id)
-                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
-                .map(itemMapper::toDto);
+                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден"))).map(itemMapper::toDto);
     }
 
     @Override
@@ -49,7 +52,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Mono<ReactivePage<ItemDto>> getAll(Integer pageNumber, Integer pageSize, String search, SortType sort) {
+    public Mono<SimplePage<ItemDto>> getAll(Integer pageNumber, Integer pageSize, String search, SortType sort) {
         final int offset = pageNumber * pageSize;
         final int num = pageNumber;
         final int size = pageSize;
@@ -57,11 +60,18 @@ public class ItemServiceImpl implements ItemService {
             sort = SortType.ALPHA;
         }
 
-        String searchPattern;
+        String cacheKey = "" + pageNumber + ":" + pageSize + ":" + search + ":" + sort;
+
+        ValueWrapper cachedResult = cacheManager.getCache("itemsGetAll").get(cacheKey);
+
+        if (cachedResult != null && cachedResult.get() instanceof SimplePage) {
+            return Mono.just((SimplePage<ItemDto>) cachedResult.get());
+        }
+
         Flux<Item> content;
         Mono<Long> totalElements;
 
-        if (search == null) {
+        if (search == null || search.isBlank()) {
             totalElements = itemRepository.count();
             if (sort.equals(SortType.ALPHA)) {
                 content = itemRepository.findAllLimitOffsetSortedByTitle(pageSize, offset);
@@ -69,56 +79,56 @@ public class ItemServiceImpl implements ItemService {
                 content = itemRepository.findAllLimitOffsetSortedByPrice(pageSize, offset);
             }
         } else {
-            searchPattern = "%" + search.strip() + "%";
+            String searchPattern = "%" + search.strip() + "%";
             totalElements = itemRepository.countBySearchTerm(searchPattern);
-
             if (sort.equals(SortType.ALPHA)) {
                 content = itemRepository.findAllBySearchTermSortedByTitle(searchPattern, pageSize, offset);
             } else {
                 content = itemRepository.findAllBySearchTermSortedByPrice(searchPattern, pageSize, offset);
             }
         }
-        Flux<ItemDto> contentDto = content
-                .map(itemMapper::toDto);
 
-        return Mono.zip(contentDto.collectList(), totalElements)
-                .map(tuple -> new ReactivePage<ItemDto>(
-                Flux.fromIterable(tuple.getT1()),
-                Mono.just(tuple.getT2()),
+        Mono<SimplePage<ItemDto>> result = Mono.zip(
+            content.map(itemMapper::toDto).collectList(),
+            totalElements
+        )
+        .map(tuple -> new SimplePage<ItemDto>(
+                tuple.getT1(),
+                tuple.getT2(),
                 num,
-                size));
+                size
+        ));
+
+        return result.doOnSuccess(x -> {
+            cacheManager.getCache("itemsGetAll").put(cacheKey, x);
+        });
     }
 
     @Override
     public Mono<ItemDto> addCartInfo(ItemDto dto) {
-        return orderService.getCart()
-                .map(cart -> {
-                    return cart.getItems();
-                })
-                .defaultIfEmpty(Collections.emptyList())
-                .flatMap(items -> {
+        return orderService.getCart().map(cart -> {
+            return cart.getItems();
+        }).defaultIfEmpty(Collections.emptyList()).flatMap(items -> {
 
-                    Map<UUID, Integer> quantByItemId = items.stream()
-                            .collect(Collectors.toMap(ItemDto::getId, ItemDto::getQuantity));
+            Map<UUID, Integer> quantByItemId = items.stream()
+                    .collect(Collectors.toMap(ItemDto::getId, ItemDto::getQuantity));
 
-                    long count = quantByItemId.getOrDefault(dto.getId(), 0);
+            long count = quantByItemId.getOrDefault(dto.getId(), 0);
 
-                    ItemDto newDto = new ItemDto();
-                    BeanUtils.copyProperties(dto, newDto);
-                    newDto.setQuantity(count > 0 ? (int) count : 0);
-                    return Mono.just(newDto);
-                });
+            ItemDto newDto = new ItemDto();
+            BeanUtils.copyProperties(dto, newDto);
+            newDto.setQuantity(count > 0 ? (int) count : 0);
+            return Mono.just(newDto);
+        });
     }
 
-    public Mono<ReactivePage<ItemDto>> addCartInfo(ReactivePage<ItemDto> page) {
-        return Mono.just(page).flatMap(x -> {
-            return Mono.just(
-                    new ReactivePage<ItemDto>(
-                            x.getContent().flatMap(this::addCartInfo),
-                            x.getTotalElements(),
-                            x.pageNumber(),
-                            x.pageSize()));
-        });
+    public Mono<SimplePage<ItemDto>> addCartInfo(SimplePage<ItemDto> page) {
+        var updatedContent = Flux.fromIterable(page.getContent())
+                .flatMap(this::addCartInfo)
+                .collectList();
+
+        return Mono.zip(updatedContent, Mono.just(page.getTotalElements()))
+                .map(tuple -> new SimplePage<>(tuple.getT1(), tuple.getT2(), page.pageNumber(), page.pageSize()));
     }
 
 }

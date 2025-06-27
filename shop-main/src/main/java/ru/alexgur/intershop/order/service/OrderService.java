@@ -2,8 +2,6 @@ package ru.alexgur.intershop.order.service;
 
 import java.util.UUID;
 
-import org.springframework.web.reactive.result.view.Rendering;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.order.dto.OrderDto;
