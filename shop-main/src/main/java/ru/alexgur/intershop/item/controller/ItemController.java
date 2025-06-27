@@ -49,13 +49,16 @@ public class ItemController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<ServerResponse> createItem(@Valid @RequestBody Mono<ItemNewDto> item) {
         return itemService.add(item)
+                .flatMap(itemService::addCartInfo)
                 .then(ServerResponse.seeOther(URI.create("/"))
                         .build());
     }
 
     @GetMapping("/items/{id}")
     public Mono<Rendering> getItem(@PathVariable @ValidUUID UUID id) {
-        return itemService.get(id).map(data -> Rendering.view("item")
+        return itemService.get(id)
+                .flatMap(itemService::addCartInfo)
+                .map(data -> Rendering.view("item")
                 .modelAttribute("item", data)
                 .build());
     }
@@ -67,7 +70,8 @@ public class ItemController {
             @RequestParam(defaultValue = "10") @Positive Integer pageSize,
             @RequestParam(defaultValue = "1") @Positive Integer pageNumber) {
 
-        Mono<ReactivePage<ItemDto>> page = itemService.getAll(pageNumber - 1, pageSize, search, sort);
+        Mono<ReactivePage<ItemDto>> page = itemService.getAll(pageNumber - 1, pageSize, search, sort)
+                .flatMap(itemService::addCartInfo);
 
         return page.map(data -> Rendering.view("main")
                 .modelAttribute("items", data.getContent().buffer(3))

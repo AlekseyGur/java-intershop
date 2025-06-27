@@ -40,8 +40,7 @@ public class ItemServiceImpl implements ItemService {
     public Mono<ItemDto> get(UUID id) {
         return itemRepository.findById(id)
                 .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден")))
-                .map(itemMapper::toDto)
-                .flatMap(this::addCartInfo);
+                .map(itemMapper::toDto);
     }
 
     @Override
@@ -80,18 +79,18 @@ public class ItemServiceImpl implements ItemService {
             }
         }
         Flux<ItemDto> contentDto = content
-        .map(itemMapper::toDto)
-        .flatMap(this::addCartInfo);
+                .map(itemMapper::toDto);
 
         return Mono.zip(contentDto.collectList(), totalElements)
-        .map(tuple -> new ReactivePage<>(
+                .map(tuple -> new ReactivePage<ItemDto>(
                 Flux.fromIterable(tuple.getT1()),
                 Mono.just(tuple.getT2()),
                 num,
                 size));
     }
 
-    private Mono<ItemDto> addCartInfo(ItemDto dto) {
+    @Override
+    public Mono<ItemDto> addCartInfo(ItemDto dto) {
         return orderService.getCart()
                 .map(cart -> {
                     return cart.getItems();
@@ -109,6 +108,17 @@ public class ItemServiceImpl implements ItemService {
                     newDto.setQuantity(count > 0 ? (int) count : 0);
                     return Mono.just(newDto);
                 });
+    }
+
+    public Mono<ReactivePage<ItemDto>> addCartInfo(ReactivePage<ItemDto> page) {
+        return Mono.just(page).flatMap(x -> {
+            return Mono.just(
+                    new ReactivePage<ItemDto>(
+                            x.getContent().flatMap(this::addCartInfo),
+                            x.getTotalElements(),
+                            x.pageNumber(),
+                            x.pageSize()));
+        });
     }
 
 }

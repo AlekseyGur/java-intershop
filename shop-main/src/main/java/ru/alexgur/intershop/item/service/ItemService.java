@@ -16,4 +16,8 @@ public interface ItemService {
     Mono<Boolean> checkIdExist(UUID id);
 
     Mono<ItemDto> get(UUID id);
+
+    Mono<ItemDto> addCartInfo(ItemDto dto);
+
+    Mono<ReactivePage<ItemDto>> addCartInfo(ReactivePage<ItemDto> page);
 }
