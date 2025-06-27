@@ -2,6 +2,8 @@ package ru.alexgur.intershop.order.service;
 
 import java.util.UUID;
 
+import org.springframework.web.reactive.result.view.Rendering;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.order.dto.OrderDto;
@@ -14,7 +16,7 @@ public interface OrderService {
 
     Mono<Void> updateCartQuantity(UUID itemId, String action);
 
-    Mono<OrderDto> getCartOrCreateNew();
+    Mono<OrderDto> getCart();
 
     Mono<OrderDto> buyItems();
 
@@ -23,4 +25,6 @@ public interface OrderService {
     Mono<Void> removeItemFromOrder(UUID orderId, UUID orderItemId);
 
     Mono<OrderItemDto> addItemToOrder(UUID orderId, UUID itemId, Integer quantity);
+
+    Mono<OrderDto> getCartOrCreateNew();
 }

@@ -92,7 +92,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Mono<ItemDto> addCartInfo(ItemDto dto) {
-        return orderService.getCartOrCreateNew()
+        return orderService.getCart()
                 .map(cart -> {
                     return cart.getItems();
                 })

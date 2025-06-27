@@ -9,27 +9,19 @@ import ru.alexgur.payment.model.Balance;
 import java.util.Map;
 
 @Component
-public class PaymentServiceClient implements PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
     @Value("${payment.service.url}")
     private String baseUrl;
 
     @Override
     public Mono<Balance> getCurrentBalance() {
-        return WebClient.create(baseUrl)
-                .get()
-                .uri("/payments/balance")
-                .retrieve()
-                .bodyToMono(Balance.class);
+        return WebClient.create(baseUrl).get().uri("/payments/balance").retrieve().bodyToMono(Balance.class);
     }
 
     @Override
     public Mono<Balance> makePayment(int amount) {
-        return WebClient.create(baseUrl)
-                .post()
-                .uri("/payments/pay?amount=" + amount)
-                .bodyValue(Map.of())
-                .retrieve()
+        return WebClient.create(baseUrl).post().uri("/payments/pay?amount=" + amount).bodyValue(Map.of()).retrieve()
                 .bodyToMono(Balance.class);
     }
 }

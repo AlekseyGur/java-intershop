@@ -68,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<OrderDto> buyItems() {
-        return getCartOrCreateNew()
+        return getCart()
                 .flatMap(this::validateOrderIsNotEmpty)
                 .flatMap(this::validateOrderIsPaid)
                 .flatMap(this::setOrderPaid);
@@ -144,6 +144,11 @@ public class OrderServiceImpl implements OrderService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
+    public Mono<OrderDto> getCart() {
+        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
+                .flatMap(this::convertOrderToOrderDto);
+    }
+
     public Mono<OrderDto> getCartOrCreateNew() {
         return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
                 .flatMap(this::convertOrderToOrderDto)
@@ -198,7 +203,6 @@ public class OrderServiceImpl implements OrderService {
             Order originalOrder = tuple.getT1();
             List<ItemDto> itemsList = tuple.getT2();
             Map<UUID, Integer> quantities = tuple.getT3();
-
 
             OrderDto dto = new OrderDto();
             BeanUtils.copyProperties(originalOrder, dto);

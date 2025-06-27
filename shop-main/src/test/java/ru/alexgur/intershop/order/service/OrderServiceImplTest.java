@@ -74,7 +74,7 @@ class OrderServiceImplTest extends BaseTest {
     void testCartAddOneItem() {
         changeItemCountInCartUsingEndpont("PLUS");
 
-        OrderDto order = orderServiceImpl.getCartOrCreateNew().block();
+        OrderDto order = orderServiceImpl.getCart().block();
 
         assertThat(order).isNotNull();
 
@@ -90,7 +90,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("PLUS");
         changeItemCountInCartUsingEndpont("PLUS");
 
-        OrderDto order = orderServiceImpl.getCartOrCreateNew().block();
+        OrderDto order = orderServiceImpl.getCart().block();
 
         assertThat(order.getItems().get(0).getQuantity()).isEqualTo(2);
     }
@@ -101,7 +101,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("pluS");
         changeItemCountInCartUsingEndpont("MiNuS");
 
-        OrderDto order = orderServiceImpl.getCartOrCreateNew().block();
+        OrderDto order = orderServiceImpl.getCart().block();
 
         assertThat(order.getItems().get(0).getQuantity()).isEqualTo(1);
     }
@@ -113,7 +113,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("MiNuS");
         changeItemCountInCartUsingEndpont("MiNuS");
 
-        OrderDto order = orderServiceImpl.getCartOrCreateNew().block();
+        OrderDto order = orderServiceImpl.getCart().block();
 
         assertThat(order.getItems().size()).isEqualTo(0);
     }
