@@ -1,6 +1,9 @@
-# -Dspring.profiles.active=dev
 server:
   port: 8080
+
+payment:
+  service:
+    url: http://localhost:8081
 
 logging:
   level:

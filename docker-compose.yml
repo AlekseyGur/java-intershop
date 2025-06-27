@@ -7,6 +7,7 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/intershop
       - SPRING_DATASOURCE_USERNAME=intershop
       - SPRING_DATASOURCE_PASSWORD=intershop
+      - PAYMENT_SERVICE_URL=http://payment-service:8081/intershop
     depends_on:
       - postgres
 
@@ -14,12 +15,8 @@ services:
     build: ./shop-payment
     ports:
       - "8081:8081"
-    environment:
-      - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/intershop
-      - SPRING_DATASOURCE_USERNAME=intershop
-      - SPRING_DATASOURCE_PASSWORD=intershop
     depends_on:
-      - postgres
+      - redis
 
   db:
     image: postgres:latest
