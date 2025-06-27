@@ -26,7 +26,7 @@ class CartControllerTest extends BaseTest {
 
     @BeforeEach
     public void getFirstSavedItemId() {
-        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().blockFirst();
+            ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().get(0);
         firstSavedItemId = savedItem.getId();
     }
 
