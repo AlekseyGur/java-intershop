@@ -1,4 +1,4 @@
-package ru.yandex.practicum.payment;
+package ru.alexgur.payment;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
+import ru.alexgur.payment.model.Balance;
+import ru.alexgur.payment.repository.BalanceRepository;
 
 @SpringBootTest
 @AutoConfigureWebTestClient

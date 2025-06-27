@@ -1,4 +1,4 @@
-package ru.yandex.practicum.payment;
+package ru.alexgur.payment.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

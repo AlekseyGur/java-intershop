@@ -1,4 +1,4 @@
-package ru.yandex.practicum.payment;
+package ru.alexgur.payment.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.error.InsufficientFundsException;
+import ru.alexgur.payment.error.InsufficientFundsException;
+import ru.alexgur.payment.model.Balance;
+import ru.alexgur.payment.repository.BalanceRepository;
 
 @RestController
 @RequestMapping("/payments")
@@ -27,17 +29,14 @@ public class PaymentController {
 
     @PostMapping("/pay")
     @Operation(summary = "Осуществить платеж")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Платеж успешно обработан"),
-            @ApiResponse(responseCode = "400", description = "Недостаточно средств")
-    })
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Платеж успешно обработан"),
+            @ApiResponse(responseCode = "400", description = "Недостаточно средств") })
     public Mono<Balance> makePayment(@Parameter(description = "Сумма платежа") @RequestParam int amount) {
-        return balanceRepository.getCurrentBalance()
-                .flatMap(currentBalance -> {
-                    if (currentBalance.getAmount() < amount) {
-                        return Mono.error(new InsufficientFundsException(currentBalance.getAmount(), amount));
-                    }
-                    return balanceRepository.updateBalance(currentBalance.getAmount() - amount);
-                });
+        return balanceRepository.getCurrentBalance().flatMap(currentBalance -> {
+            if (currentBalance.getAmount() < amount) {
+                return Mono.error(new InsufficientFundsException(currentBalance.getAmount(), amount));
+            }
+            return balanceRepository.updateBalance(currentBalance.getAmount() - amount);
+        });
     }
 }

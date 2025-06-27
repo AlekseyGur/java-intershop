@@ -1,7 +1,8 @@
-package ru.yandex.practicum.payment;
+package ru.alexgur.payment.repository;
 
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
+import ru.alexgur.payment.model.Balance;
 
 @Repository
 public class BalanceRepository {

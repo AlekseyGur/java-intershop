@@ -1,4 +1,4 @@
-package ru.yandex.practicum.error;
+package ru.alexgur.payment.error;
 
 public class InsufficientFundsException extends RuntimeException {
     public InsufficientFundsException(double currentBalance, double requiredAmount) {

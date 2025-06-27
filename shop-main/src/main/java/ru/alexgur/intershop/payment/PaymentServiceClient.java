@@ -4,15 +4,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import ru.alexgur.payment.model.Balance;
 
 import java.util.Map;
 
 @Component
-public class PaymentServiceClient {
+public class PaymentServiceClient implements PaymentService {
 
     @Value("${payment.service.url}")
     private String baseUrl;
 
+    @Override
     public Mono<Balance> getCurrentBalance() {
         return WebClient.create(baseUrl)
                 .get()
@@ -21,6 +23,7 @@ public class PaymentServiceClient {
                 .bodyToMono(Balance.class);
     }
 
+    @Override
     public Mono<Balance> makePayment(int amount) {
         return WebClient.create(baseUrl)
                 .post()
