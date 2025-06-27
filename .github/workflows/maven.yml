@@ -14,13 +14,13 @@ jobs:
       uses: actions/setup-java@v4
       with:
         java-version: '21'
-        distribution: 'temurin'
+        distribution: 'openjdk'
         cache: maven
+
+    - name: Checkstyle
+      run: mvn checkstyle:checkstyle
         
     - name: Build and test with Maven
       run: |
         mvn clean install -B -DskipTests=false --file pom.xml
         mvn test --file pom.xml
-
-    - name: Checkstyle
-      run: mvn checkstyle:checkstyle

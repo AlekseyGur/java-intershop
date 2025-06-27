@@ -1,0 +1,57 @@
+openapi: 3.1.0
+info:
+  title: Payment Service API
+  description: API для управления платежами и балансом
+  version: 1.0.0
+tags:
+  - name: Сервис Платежей
+    description: Управление платежами и балансом
+paths:
+  /payments/pay:
+    post:
+      tags:
+        - Сервис Платежей
+      summary: Осуществить платеж
+      operationId: makePayment
+      parameters:
+        - name: amount
+          in: query
+          description: Сумма платежа
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Платеж успешно обработан
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+        "400":
+          description: Недостаточно средств
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+  /payments/balance:
+    get:
+      tags:
+        - Сервис Платежей
+      summary: Получить текущий баланс
+      operationId: getBalance
+      responses:
+        "200":
+          description: Успешное получение баланса
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+components:
+  schemas:
+    Balance:
+      type: object
+      properties:
+        amount:
+          type: integer
+          format: int32

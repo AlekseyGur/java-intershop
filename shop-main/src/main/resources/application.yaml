@@ -73,6 +73,18 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+springdoc:
+  info:
+    title: My API
+    description: API для управления пользователями
+  api-docs:
+    version: OPENAPI_3_1
+  swagger-ui:
+    enabled: true
+    path: /help.html
+    try-it-out-enabled: true
+    persist-authorization: true
+    packages.to.scan: ru.alexgur.intershop
 
 ---
 # Профиль mvn spring-boot:run -Dspring-boot.run.profiles=dev
@@ -80,6 +92,10 @@ spring:
   config:
     activate:
       on-profile: dev
+
+#   sql:
+#     init:
+#       mode: always
 
   servlet:
     multipart:
@@ -93,6 +109,3 @@ spring:
     password: intershop
     pool:
       enabled: true
-
- 
-
