@@ -65,67 +65,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>7.12.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-server</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/api-spec.yaml</inputSpec>
-                            <generatorName>spring</generatorName>
-                            <output>${project.build.directory}/generated-sources/openapi-server</output>
-                            <modelPackage>ru.ya.server.domain</modelPackage>
-                            <apiPackage>ru.ya.server.api</apiPackage>
-                            <invokerPackage>ru.ya.server</invokerPackage>
-                            <configOptions>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <requestMappingMode>controller</requestMappingMode>
-                                <interfaceOnly>false</interfaceOnly>
-                                <library>spring-boot</library>
-                                <reactive>true</reactive>
-                                <useSpringBoot3>true</useSpringBoot3>
-                                <useJakartaEe>true</useJakartaEe>
-                                <useTags>true</useTags>
-                                <dateLibrary>java8</dateLibrary>
-                                <openApiNullable>false</openApiNullable>
-                                <serializableModel>true</serializableModel>
-                                <returnSuccessCode>true</returnSuccessCode>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>generate-client</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/api-spec.yaml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <output>${project.build.directory}/generated-sources/openapi-client</output>
-                            <modelPackage>ru.ya.client.domain</modelPackage>
-                            <apiPackage>ru.ya.client.api</apiPackage>
-                            <invokerPackage>ru.ya.client</invokerPackage>
-                            <ignoreFileOverride>.openapi-generator-java-sources.ignore</ignoreFileOverride>
-                            <configOptions>
-                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
-                                <library>webclient</library>
-                                <useJakartaEe>true</useJakartaEe>
-                                <useTags>true</useTags>
-                                <openApiNullable>false</openApiNullable>
-                                <serializableModel>true</serializableModel>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
