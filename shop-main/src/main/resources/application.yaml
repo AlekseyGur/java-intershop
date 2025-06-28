@@ -10,10 +10,13 @@ logging:
     root: INFO
     org:
       springframework:
-        r2dbc: DEBUG
+        r2dbc: INFO
         web: INFO
         http: INFO
         core: INFO
+        boot:
+          autoconfigure:
+            liquibase: INFO
       reactor:
         netty: INFO
 
@@ -27,16 +30,18 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
+  sql:
+    init:
+      mode: always
+
   liquibase:
     enabled: true
     change-log: classpath:liquibase/db.changelog-master.yaml
-  #   url: jdbc:postgresql://host.docker.internal:54332/intershop
-  #   user: postgres
-  #   password: postgres
-  #   default-schema: shop
-  #   driver-class-name: org.postgresql.Driver
 
-  application.name: intershop
+  datasource:
+    url: jdbc:postgresql://localhost:5432/intershop
+    username: intershop
+    password: intershop
 
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/intershop
@@ -45,25 +50,14 @@ spring:
     pool:
       enabled: true
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/intershop
-    username: intershop
-    password: intershop
-    
-  # sql:
-  #   init:
-  #     mode: always
-
   data:
-    r2dbc:
-      repositories:
-        enabled: true
-
     redis:
+      timeout: PT10S
       repositories:
         enabled: false
       host: localhost
       port: 6379
+    
 
   thymeleaf:
     cache: false
@@ -105,9 +99,9 @@ spring:
     activate:
       on-profile: dev
 
-#   sql:
-#     init:
-#       mode: always
+  sql:
+    init:
+      mode: always
 
   servlet:
     multipart:
@@ -124,6 +118,7 @@ spring:
 
   data:
     redis:
+      timeout: PT10S
       repositories:
         enabled: false
       host: localhost
