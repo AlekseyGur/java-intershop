@@ -17,8 +17,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>shop-main</module>
         <module>shop-payment</module>
+        <module>shop-main</module>
     </modules>
 
     <properties>
