@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.reactive.result.view.Rendering;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.order.service.OrderService;
 import ru.alexgur.intershop.system.valid.ValidUUID;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
@@ -49,10 +51,12 @@ public class CartController {
     public Mono<String> buyItems() {
         return orderService.buyItems()
                 .thenReturn("redirect:/orders")
-                .onErrorResume(x -> {
-                    return Mono.just(Rendering.view("error")
-                            .modelAttribute("errorMessage", "Не удалось оплатить заказ")
-                            .build().toString());
+                .doOnError(error -> {
+                    log.error("Произошла ошибка при покупке", error);
+                })
+                .onErrorResume(e -> {
+                    log.error("Перенаправляю на страницу ошибки...");
+                    return Mono.just("redirect:/error");
                 });
     }
 }

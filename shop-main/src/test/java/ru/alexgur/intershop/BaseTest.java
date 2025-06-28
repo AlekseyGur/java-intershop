@@ -9,15 +9,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
+
+import com.redis.testcontainers.RedisContainer;
+
+import ru.alexgur.payment.service.PaymentService;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,6 +42,15 @@ public class BaseTest {
     @Autowired
     public DatabaseClient databaseClient;
 
+    @MockitoBean
+    public PaymentService paymentService;
+
+    @Autowired
+    public CacheManager cacheManager;
+
+    private static final RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:latest"))
+            .withExposedPorts(6379);
+
     private static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
             .withDatabaseName("intershop-test")
             .withUsername("intershop-test")
@@ -47,6 +63,7 @@ public class BaseTest {
     @AfterEach
     @BeforeEach
     void cleanDb() {
+        cacheManager.getCacheNames().forEach(x -> cacheManager.getCache(x).clear());
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
     }

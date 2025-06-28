@@ -76,4 +76,14 @@ public class ErrorHandler {
         ErrorResponse error = new ErrorResponse(e.getMessage(), 400);
         return Mono.just(ResponseEntity.badRequest().body(error));
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<ResponseEntity<ErrorResponse>> paymentException(final PaymentException e) {
+        log.error("Ошибка платежа. " + e.getMessage());
+
+        ErrorResponse error = new ErrorResponse(e.getMessage(), 400);
+        return Mono.just(ResponseEntity.badRequest().body(error));
+    }
+
 }

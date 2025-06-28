@@ -22,6 +22,7 @@ import ru.alexgur.intershop.order.model.OrderItem;
 import ru.alexgur.intershop.order.repository.OrderItemsRepository;
 import ru.alexgur.intershop.order.repository.OrderRepository;
 import ru.alexgur.intershop.system.exception.NotFoundException;
+import ru.alexgur.intershop.system.exception.PaymentException;
 import ru.alexgur.intershop.system.exception.ValidationException;
 import ru.alexgur.payment.service.PaymentService;
 
@@ -70,10 +71,7 @@ public class OrderServiceImpl implements OrderService {
         return getCart()
                 .flatMap(this::validateOrderIsNotEmpty)
                 .flatMap(this::validateOrderIsPaid)
-                .flatMap(order -> {
-                    return paymentService.doPayment(order.getTotalSum())
-                            .then(Mono.just(order).flatMap(this::setOrderPaid));
-                });
+                .flatMap(this::doPayment);
     }
 
     @Override
@@ -136,9 +134,15 @@ public class OrderServiceImpl implements OrderService {
                         Mono.error(new ValidationException("Заказ уже оплачен")));
     }
 
+    private Mono<OrderDto> doPayment(OrderDto order) {
+        return paymentService.doPayment(order.getTotalSum())
+                .onErrorMap(x -> new PaymentException("Заказ не оплачен"))
+                .then(setOrderPaid(order));
+    }
+
     private Mono<OrderDto> setOrderPaid(OrderDto order) {
         return orderRepository.isPaidTrue(order.getId())
-                .thenReturn(order);
+                .flatMap(this::convertOrderToOrderDto);
     }
 
     public Mono<Order> getOrderById(UUID id) {

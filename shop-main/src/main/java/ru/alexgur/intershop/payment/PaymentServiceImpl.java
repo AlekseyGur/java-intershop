@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import ru.alexgur.intershop.system.exception.PaymentException;
 import ru.alexgur.payment.model.Balance;
 import ru.alexgur.payment.service.PaymentService;
 
@@ -17,12 +18,26 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Mono<Balance> getBalance() {
-        return WebClient.create(baseUrl).get().uri("/payments/balance").retrieve().bodyToMono(Balance.class);
+        return WebClient.create(baseUrl)
+                .get()
+                .uri("/payments/balance")
+                .retrieve()
+                .onStatus(status -> status.isError(), response -> {
+                    return Mono.error(new PaymentException("Ошибка получения баланса: " + response.statusCode()));
+                })
+                .bodyToMono(Balance.class);
     }
 
     @Override
     public Mono<Balance> doPayment(Double amount) {
-        return WebClient.create(baseUrl).post().uri("/payments/pay?amount=" + amount).bodyValue(Map.of()).retrieve()
+        return WebClient.create(baseUrl)
+                .post()
+                .uri(uriBuilder -> uriBuilder.path("/payments/pay").queryParam("amount", amount).build())
+                .bodyValue(Map.of())
+                .retrieve()
+                .onStatus(status -> status.isError(), response -> {
+                    return Mono.error(new PaymentException("Ошибка выполнения платежа: " + response.statusCode()));
+                })
                 .bodyToMono(Balance.class);
     }
 }

@@ -19,5 +19,5 @@ public interface OrderRepository extends R2dbcRepository<Order, UUID> {
     Flux<Order> findAllByIsPaidTrue();
 
     @Query(value = "UPDATE orders SET is_paid = true WHERE id = :orderId")
-    Mono<Void> isPaidTrue(@Param("orderId") UUID orderId);
+    Mono<Order> isPaidTrue(@Param("orderId") UUID orderId);
 }

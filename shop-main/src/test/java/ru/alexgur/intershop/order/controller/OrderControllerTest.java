@@ -3,9 +3,11 @@ package ru.alexgur.intershop.order.controller;
 import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.model.ActionType;
+import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderServiceImpl;
+import ru.alexgur.payment.model.Balance;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +20,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+
+import reactor.core.publisher.Mono;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
@@ -31,11 +38,12 @@ class OrderControllerTest extends BaseTest {
     private ItemServiceImpl itemServiceImpl;
 
     UUID firstSavedItemId;
+    ItemDto firstSavedItem;
 
     @BeforeEach
     public void getFirstSavedItemId() {
-            ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().get(0);
-        firstSavedItemId = savedItem.getId();
+        firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
+        firstSavedItemId = firstSavedItem.getId();
     }
 
     @Test
@@ -60,6 +68,10 @@ class OrderControllerTest extends BaseTest {
 
     @Test
     public void getOrderById() throws Exception {
+        when(paymentService.doPayment(anyDouble())).thenReturn(Mono.empty());
+        Balance balanceEntity = new Balance(firstSavedItem.getPrice() + 100.0);
+        when(paymentService.getBalance()).thenReturn(Mono.just(balanceEntity));
+
         webTestClient.get().uri("/cart")
                 .exchange()
                 .expectBody()
@@ -101,7 +113,8 @@ class OrderControllerTest extends BaseTest {
 
         webTestClient.post().uri("/cart/buy")
                 .exchange()
-                .expectStatus().is4xxClientError();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/error");
     }
 
     @Test

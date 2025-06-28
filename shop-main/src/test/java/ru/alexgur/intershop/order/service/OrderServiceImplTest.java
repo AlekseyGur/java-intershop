@@ -1,5 +1,9 @@
 package ru.alexgur.intershop.order.service;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -12,16 +16,21 @@ import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
+import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.dto.ItemDto;
+import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.order.dto.OrderDto;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import ru.alexgur.intershop.order.repository.OrderRepository;
+import ru.alexgur.payment.model.Balance;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
 class OrderServiceImplTest extends BaseTest {
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private OrderServiceImpl orderServiceImpl;
@@ -30,11 +39,12 @@ class OrderServiceImplTest extends BaseTest {
     private ItemServiceImpl itemServiceImpl;
 
     UUID firstSavedItemId;
+    ItemDto firstSavedItem;
 
     @BeforeEach
     public void getFirstSavedItemId() {
-        ItemDto savedItem = itemServiceImpl.getAll(0, 1, null, null).block().getContent().get(0);
-        firstSavedItemId = savedItem.getId();
+        firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
+        firstSavedItemId = firstSavedItem.getId();
     }
 
     void changeItemCountInCartUsingEndpont(String action) {
@@ -50,6 +60,10 @@ class OrderServiceImplTest extends BaseTest {
     }
 
     void createOrderUsingEndpont() {
+        when(paymentService.doPayment(anyDouble())).thenReturn(Mono.empty());
+        Balance balanceEntity = new Balance(firstSavedItem.getPrice() + 100.0);
+        when(paymentService.getBalance()).thenReturn(Mono.just(balanceEntity));
+
         webTestClient.post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
