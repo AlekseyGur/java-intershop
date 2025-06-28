@@ -114,7 +114,7 @@ class OrderControllerTest extends BaseTest {
         webTestClient.post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
-                .expectHeader().valueMatches("Location", "/error");
+                .expectHeader().valueMatches("Location", "/error\\?reason=low_balance");
     }
 
     @Test
