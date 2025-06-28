@@ -6,5 +6,5 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Balance {
-    private int amount;
+    private Double amount;
 }

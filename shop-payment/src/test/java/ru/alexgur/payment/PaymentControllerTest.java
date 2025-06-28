@@ -23,10 +23,10 @@ public class PaymentControllerTest {
 
     @Test
     void getBalance_allParamsAreSet_shouldReturnBalance() {
-        Balance testBalance = new Balance(2000);
+            Balance testBalance = new Balance(2000.0);
 
         Mockito.when(balanceRepository.getCurrentBalance())
-                .thenReturn(Mono.just(new Balance(2000)));
+                        .thenReturn(Mono.just(new Balance(2000.0)));
 
         webTestClient.get()
                 .uri("/payments/balance")
@@ -39,9 +39,9 @@ public class PaymentControllerTest {
     @Test
     void makePayment_sufficientFunds_shouldProcessPayment() {
         int paymentAmount = 500;
-        Balance updatedBalance = new Balance(1500);
+        Balance updatedBalance = new Balance(1500.0);
 
-        Balance testBalance = new Balance(2000);
+        Balance testBalance = new Balance(2000.0);
 
         Mockito.when(balanceRepository.getCurrentBalance())
                 .thenReturn(Mono.just(testBalance));
@@ -62,7 +62,7 @@ public class PaymentControllerTest {
 
     @Test
     void makePayment_insufficientFunds_shouldReturnBadRequest() {
-        Balance testBalance = new Balance(2000);
+            Balance testBalance = new Balance(2000.0);
         int paymentAmount = 3000;
 
         Mockito.when(balanceRepository.getCurrentBalance())
