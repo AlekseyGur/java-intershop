@@ -23,6 +23,7 @@ import ru.alexgur.intershop.order.repository.OrderItemsRepository;
 import ru.alexgur.intershop.order.repository.OrderRepository;
 import ru.alexgur.intershop.system.exception.NotFoundException;
 import ru.alexgur.intershop.system.exception.ValidationException;
+import ru.alexgur.payment.service.PaymentService;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final ItemMapper itemMapper;
+    private final PaymentService paymentService;
 
     @Override
     public Flux<OrderDto> getAll() {
@@ -71,7 +73,10 @@ public class OrderServiceImpl implements OrderService {
         return getCart()
                 .flatMap(this::validateOrderIsNotEmpty)
                 .flatMap(this::validateOrderIsPaid)
-                .flatMap(this::setOrderPaid);
+                .flatMap(order -> {
+                    return paymentService.doPayment(order.getTotalSum())
+                            .then(Mono.just(order).flatMap(this::setOrderPaid));
+                });
     }
 
     @Override

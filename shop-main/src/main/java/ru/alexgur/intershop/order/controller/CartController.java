@@ -40,7 +40,7 @@ public class CartController {
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<String> updateCartItemQuantity(
             @PathVariable @ValidUUID UUID id,
-                    @RequestPart("action") String action) {
+            @RequestPart("action") String action) {
         return orderService.updateCartQuantity(id, action)
                 .thenReturn("redirect:/cart");
     }
@@ -48,7 +48,11 @@ public class CartController {
     @PostMapping("/buy")
     public Mono<String> buyItems() {
         return orderService.buyItems()
-                .thenReturn("redirect:/orders");
+                .thenReturn("redirect:/orders")
+                .onErrorResume(x -> {
+                    return Mono.just(Rendering.view("error")
+                            .modelAttribute("errorMessage", "Не удалось оплатить заказ")
+                            .build().toString());
+                });
     }
-
 }
