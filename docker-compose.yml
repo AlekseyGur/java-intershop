@@ -1,26 +1,37 @@
 services:
   app:
-    build: ./shop
+    build: ./shop-main
     ports:
       - "8080:8080"
     environment:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/intershop
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/intershop
       - SPRING_DATASOURCE_USERNAME=intershop
       - SPRING_DATASOURCE_PASSWORD=intershop
       - PAYMENT_SERVICE_URL=http://payment-service:8081/intershop
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_TIMEOUT=PT10S
+      - SPRING_LIQUIBASE_CHANGELOG=classpath:liquibase/db.changelog-master.yml
+      - SPRING_LIQUIBASE_ENABLED=true
     depends_on:
-      - postgres
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   payment-service:
     build: ./shop-payment
     ports:
       - "8081:8081"
-    depends_on:
-      - redis
 
   db:
     image: postgres:latest
-    container_name: db
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "intershop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_USER: intershop
       POSTGRES_PASSWORD: intershop
@@ -28,7 +39,12 @@ services:
 
   redis:
     image: redis:latest
-    container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
+ 
