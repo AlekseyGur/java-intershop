@@ -32,9 +32,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderItemsRepository orderItemRepository;
     private final ItemRepository itemRepository;
-    private final OrderMapper orderMapper;
-    private final OrderItemMapper orderItemMapper;
-    private final ItemMapper itemMapper;
     private final PaymentService paymentService;
 
     @Override
@@ -53,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Mono<OrderItemDto> addItemToOrder(UUID orderId, UUID itemId, Integer quantity) {
         return addItemToOrderImpl(orderId, itemId, quantity)
-                .map(orderItemMapper::toDto);
+                .map(OrderItemMapper::toDto);
     }
 
     @Override
@@ -161,7 +158,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public Mono<OrderDto> createOrder() {
-        return orderRepository.save(new Order()).map(orderMapper::toDto);
+        return orderRepository.save(new Order()).map(OrderMapper::toDto);
     }
 
     private Mono<OrderItem> findOrCreateOrderItem(OrderDto order, UUID itemId) {
@@ -201,7 +198,7 @@ public class OrderServiceImpl implements OrderService {
                     if (ids.isEmpty()) {
                         return Mono.just(List.of());
                     }
-                    return itemRepository.findAllByIdIn(ids).map(itemMapper::toDto).collectList();
+                    return itemRepository.findAllByIdIn(ids).map(ItemMapper::toDto).collectList();
                 });
 
         return Mono.zip(Mono.just(order), itemsDtos, quantByItemId).map(tuple -> {

@@ -29,21 +29,20 @@ import ru.alexgur.intershop.system.exception.NotFoundException;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final OrderService orderService;
-    private final ItemMapper itemMapper;
     private final CacheManager cacheManager;
 
     @Override
     public Mono<ItemDto> add(Mono<ItemNewDto> dto) {
-        return dto.map(itemMapper::fromDto)
+        return dto.map(ItemMapper::fromDto)
                 .flatMap(itemRepository::save)
-                .map(itemMapper::toDto);
+                .map(ItemMapper::toDto);
     }
 
     @Override
     @Cacheable(value = "items", key = "#id.toString()")
     public Mono<ItemDto> get(UUID id) {
         return itemRepository.findById(id)
-                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден"))).map(itemMapper::toDto);
+                .switchIfEmpty(Mono.error(new NotFoundException("Товар с таким id не найден"))).map(ItemMapper::toDto);
     }
 
     @Override
@@ -89,8 +88,8 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Mono<SimplePage<ItemDto>> result = Mono.zip(
-            content.map(itemMapper::toDto).collectList(),
-            totalElements
+                content.map(ItemMapper::toDto).collectList(),
+                    totalElements
         )
         .map(tuple -> new SimplePage<ItemDto>(
                 tuple.getT1(),

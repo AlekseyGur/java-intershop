@@ -1,27 +1,39 @@
 package ru.alexgur.intershop.order.mapper;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import ru.alexgur.intershop.order.dto.OrderItemDto;
 import ru.alexgur.intershop.order.model.OrderItem;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import lombok.experimental.UtilityClass;
 
-import ru.alexgur.intershop.item.mapper.ItemMapper;
+@UtilityClass
+public class OrderItemMapper {
 
-@Mapper(componentModel = "spring", uses = { ItemMapper.class, OrderMapper.class })
-public interface OrderItemMapper {
+    public OrderItemDto toDto(OrderItem order) {
+        if (order == null) {
+            return null;
+        }
+        OrderItemDto dto = new OrderItemDto();
+        dto.setQuantity(order.getQuantity());
+        return dto;
+    }
 
-    @Mapping(target = "item", ignore = true)
-    @Mapping(target = "order", ignore = true)
-    OrderItemDto toDto(OrderItem order);
+    public OrderItem fromDto(OrderItemDto orderDto) {
+        if (orderDto == null) {
+            return null;
+        }
+        OrderItem orderItem = new OrderItem();
+        orderItem.setQuantity(orderDto.getQuantity());
+        return orderItem;
+    }
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "itemId", ignore = true)
-    @Mapping(target = "orderId", ignore = true)
-    OrderItem fromDto(OrderItemDto orderDto);
-
-    List<OrderItem> fromDto(List<OrderItemDto> ordersDto);
-
+    public List<OrderItem> fromDto(List<OrderItemDto> orderDtos) {
+        return orderDtos.stream()
+                .filter(Objects::nonNull)
+                .map(OrderItemMapper::fromDto)
+                .collect(Collectors.toList());
+    }
 }
