@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ошибка</title>
+</head>
+
+<body>
+    <a href="/orders" style="float:right;">
+        <b>ЗАКАЗЫ &cudarrr;</b>
+    </a>
+    <a href="/" style="float:right;">
+        <b>ГЛАВНАЯ &cudarrr;</b>
+    </a>
+    <table style="width:70%;margin-left:auto;margin-right:auto;">
+        <h1>Ошибка</h1>
+        <p th:if="${reason == 'low_balance'}">
+            Низкий баланс! Пополните счёт для продолжения покупок.
+        </p>
+        <p th:if="${reason != 'low_balance'}">
+            Произошла неизвестная ошибка. Обратитесь в службу поддержки.
+        </p>
+        <a href="/">&lt;- На главную страницу</a>
+    </table>
+</body>
+
+</html>

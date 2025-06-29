@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:8081
+  description: Generated server url
+tags:
+- name: Сервис платежей
+  description: Совершение платежей и получение баланса
+paths:
+  /payments/pay:
+    post:
+      tags:
+      - Сервис платежей
+      summary: Сделать платеж
+      operationId: makePayment
+      parameters:
+      - name: amount
+        in: query
+        description: Сумма платежа
+        required: true
+        schema:
+          type: number
+          format: double
+      responses:
+        "200":
+          description: Платеж успешно обработан
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+        "400":
+          description: Недостаточно средств
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+  /payments/balance:
+    get:
+      tags:
+      - Сервис платежей
+      summary: Получить текущий баланс
+      operationId: getBalance
+      responses:
+        "200":
+          description: Успешное получение баланса
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Balance"
+components:
+  schemas:
+    Balance:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
