@@ -24,9 +24,9 @@ jobs:
         mvn install -P check --no-transfer-progress
         docker compose build
         
-      - name: Compose down
-        run: |
-          docker compose down
+    - name: Compose down
+      run: |
+        docker compose down
 
     # - name: Checkstyle
     #   run: mvn checkstyle:checkstyle
