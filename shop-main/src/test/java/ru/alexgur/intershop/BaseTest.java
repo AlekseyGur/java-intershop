@@ -7,6 +7,7 @@ import java.util.Random;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.cache.CacheManager;
@@ -30,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 
-@SpringBootTest(classes = { Main.class })
+@SpringBootTest(classes = { MainIntershop.class })
+@AutoConfigureWebTestClient
 public class BaseTest {
 
     @Autowired
@@ -58,6 +60,7 @@ public class BaseTest {
 
     static {
         postgres.start();
+        redis.start();
     }
 
     @AfterEach
@@ -66,6 +69,21 @@ public class BaseTest {
         cacheManager.getCacheNames().forEach(x -> cacheManager.getCache(x).clear());
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
+    }
+
+    @DynamicPropertySource
+    static void registerRedisProperties(DynamicPropertyRegistry registry) {
+        String host = redis.getHost();
+        Integer port = redis.getFirstMappedPort();
+        String containerId = redis.getContainerId();
+
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
+
+        System.out.println("=========================");
+        System.out.println("Redis host: " + host + " port " + port.toString());
+        System.out.println("docker exec -it " + containerId + " redis-cli ");
+        System.out.println("=========================");
     }
 
     @DynamicPropertySource

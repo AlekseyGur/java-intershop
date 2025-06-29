@@ -5,7 +5,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import ru.alexgur.payment.model.Balance;
@@ -15,6 +18,7 @@ import ru.alexgur.payment.service.BalanceService;
 @RequiredArgsConstructor
 @RequestMapping("/payments")
 @Tag(name = "Сервис платежей", description = "Совершение платежей и получение баланса")
+@Validated
 public class PaymentController {
 
     private final BalanceService balanceService;
@@ -32,7 +36,7 @@ public class PaymentController {
             @ApiResponse(responseCode = "200", description = "Платеж успешно обработан"),
             @ApiResponse(responseCode = "400", description = "Недостаточно средств")
     })
-    public Mono<Balance> makePayment(@Parameter(description = "Сумма платежа") @RequestParam Double amount) {
+    public Mono<Balance> makePayment(@Parameter(description = "Сумма платежа") @RequestParam @Positive Double amount) {
         return balanceService.doPayment(amount);
     }
 }

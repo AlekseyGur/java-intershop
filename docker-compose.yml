@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: shop-main
     build: ./shop-main
     ports:
       - "8080:8080"
@@ -21,11 +22,13 @@ services:
         condition: service_healthy
 
   payment-service:
+    container_name: shop-payment
     build: ./shop-payment
     ports:
       - "8081:8081"
 
   db:
+    container_name: db
     image: postgres:latest
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "intershop"]
@@ -38,6 +41,7 @@ services:
       POSTGRES_DB: intershop
 
   redis:
+    container_name: redis
     image: redis:latest
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
