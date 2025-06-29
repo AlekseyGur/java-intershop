@@ -17,17 +17,18 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    # - name: Checkstyle
-    #   run: mvn checkstyle:checkstyle
-        
+    - name: Checkstyle
+      run: mvn checkstyle:checkstyle
+
     - name: Checkstyle (suppress detailed output)
       run: |
-        # Запускаем Checkstyle и сохраняем подробный вывод в файл
-        mvn checkstyle:checkstyle > checkstyle-output.txt 2>&1
+        # Запускаем Checkstyle и сохраняем вывод в переменную
+        CHECKSTYLE_OUTPUT=$(mvn checkstyle:checkstyle 2>&1)
         # Проверяем статус выполнения
         if [[ $? -ne 0 ]]; then
-          # Если есть ошибки, выводим содержимое файла
-          cat checkstyle-output.txt
+          # Если есть ошибки, выводим содержимое переменной
+          echo "::error::Checkstyle found issues:"
+          echo "$CHECKSTYLE_OUTPUT"
           exit 1
         fi
 
