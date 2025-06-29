@@ -17,6 +17,17 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
+    - name: Check and Build application
+      run: |
+        cp -rf ./tests/checkstyle.xml ./checkstyle.xml
+        cp -rf ./tests/suppressions.xml ./suppressions.xml
+        mvn install -P check --no-transfer-progress
+        docker compose build
+        
+      - name: Compose down
+        run: |
+          docker compose down
+
     # - name: Checkstyle
     #   run: mvn checkstyle:checkstyle
         
@@ -24,14 +35,3 @@ jobs:
     #   run: |
     #     mvn clean install -B -DskipTests=false --file pom.xml
     #     mvn test --file pom.xml
-
-    - name: Check and Build application
-      run: |
-        cp -rf ./tests/checkstyle.xml ./checkstyle.xml
-        cp -rf ./tests/suppressions.xml ./suppressions.xml
-        mvn install -P check --no-transfer-progress
-        docker compose build
-      
-      - name: Compose down
-        run: |
-          docker compose down
