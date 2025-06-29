@@ -18,7 +18,7 @@ jobs:
         cache: maven
 
     - name: Checkstyle
-      run: mvn checkstyle:checkstyle
+      run: mvn checkstyle:checkstyle -q
 
     - name: Checkstyle (suppress detailed output)
       run: |
