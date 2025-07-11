@@ -11,12 +11,12 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class UserDetails extends User {
+public class CustomUserDetails extends User {
     private UUID userId;
 
     @Builder(builderMethodName = "customUserDetailsBuilder")
-    public UserDetails(String login,
-            String password,
+    public CustomUserDetails(String login,
+                    String password,
             boolean enabled,
             boolean accountNonExpired,
             boolean credentialsNonExpired,
