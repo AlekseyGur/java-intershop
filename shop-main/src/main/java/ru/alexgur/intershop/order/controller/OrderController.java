@@ -3,6 +3,7 @@ package ru.alexgur.intershop.order.controller;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderService;
 import ru.alexgur.intershop.system.valid.ValidUUID;
+import ru.alexgur.intershop.user.model.CustomUserDetails;
 
 @Controller
 @RequiredArgsConstructor
@@ -26,16 +28,16 @@ public class OrderController {
 
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<String> updateCartItemQuantity(
-            @PathVariable @ValidUUID UUID id,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+                    @PathVariable @ValidUUID UUID id,
             @RequestPart("action") String action) {
-        return orderService.updateCartQuantity(id, action)
+        return orderService.updateCartQuantity(id, action, userDetails.getUserId())
                 .thenReturn("redirect:/items/" + id);
     }
 
     @GetMapping("/orders")
-    public Mono<Rendering> getCartItems() {
-
-        Flux<OrderDto> data = orderService.getAll();
+    public Mono<Rendering> getCartItems(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Flux<OrderDto> data = orderService.getAll(userDetails.getUserId());
 
         return Mono.just(Rendering.view("orders")
                 .modelAttribute("orders", data)
@@ -43,8 +45,10 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{orderId}")
-    public Mono<Rendering> getById(@PathVariable @ValidUUID UUID orderId) {
-        return orderService.get(orderId).map(data -> Rendering.view("order")
+    public Mono<Rendering> getById(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable @ValidUUID UUID orderId) {
+        return orderService.get(orderId, userDetails.getUserId()).map(data -> Rendering.view("order")
                 .modelAttribute("order", data)
                 .build());
     }

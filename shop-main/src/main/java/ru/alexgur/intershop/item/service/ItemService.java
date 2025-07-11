@@ -17,7 +17,7 @@ public interface ItemService {
 
     Mono<ItemDto> get(UUID id);
 
-    Mono<ItemDto> addCartInfo(ItemDto dto);
+    Mono<ItemDto> addCartInfo(ItemDto dto, UUID userId);
 
-    Mono<SimplePage<ItemDto>> addCartInfo(SimplePage<ItemDto> page);
+    Mono<SimplePage<ItemDto>> addCartInfo(SimplePage<ItemDto> page, UUID userId);
 }

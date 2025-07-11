@@ -36,26 +36,26 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentService paymentService;
 
     @Override
-    public Flux<OrderDto> getAll() {
+    public Flux<OrderDto> getAll(UUID userId) {
         return orderRepository.findAllByIsPaidTrue()
                 .flatMap(this::convertOrderToOrderDto);
     }
 
     @Override
-    public Mono<OrderDto> get(UUID orderId) {
+    public Mono<OrderDto> get(UUID orderId, UUID userId) {
         return orderRepository.findById(orderId)
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
     @Override
-    public Mono<OrderItemDto> addItemToOrder(UUID orderId, UUID itemId, Integer quantity) {
+    public Mono<OrderItemDto> addItemToOrder(UUID orderId, UUID itemId, Integer quantity, UUID userId) {
         return addItemToOrderImpl(orderId, itemId, quantity)
                 .map(OrderItemMapper::toDto);
     }
 
     @Override
-    public Mono<Void> removeItemFromOrder(UUID orderId, UUID orderItemId) {
+    public Mono<Void> removeItemFromOrder(UUID orderId, UUID orderItemId, UUID userId) {
         return orderRepository.findById(orderId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(foundOrder -> {
@@ -67,8 +67,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<OrderDto> buyItems() {
-        return getCart()
+    public Mono<OrderDto> buyItems(UUID userId) {
+        return getCart(userId)
                 .flatMap(this::validateOrderIsNotEmpty)
                 .flatMap(this::validateOrderIsPaid)
                 .flatMap(this::doPayment);
@@ -80,8 +80,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Mono<Void> updateCartQuantity(UUID itemId, String action) {
-        return getCartOrCreateNew()
+    public Mono<Void> updateCartQuantity(UUID itemId, String action, UUID userId) {
+        return getCartOrCreateNew(userId)
                 .flatMap(order -> findOrCreateOrderItem(order, itemId))
                 .flatMap(orderItem -> {
                     return switch (action.toUpperCase()) {
@@ -150,12 +150,14 @@ public class OrderServiceImpl implements OrderService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
 
-    public Mono<OrderDto> getCart() {
+    @Override
+    public Mono<OrderDto> getCart(UUID userId) {
         return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
                 .flatMap(this::convertOrderToOrderDto);
     }
 
-    public Mono<OrderDto> getCartOrCreateNew() {
+    @Override
+    public Mono<OrderDto> getCartOrCreateNew(UUID userId) {
         return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(createOrder());

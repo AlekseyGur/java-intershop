@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,7 @@ import ru.alexgur.intershop.item.dto.SimplePage;
 import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemService;
 import ru.alexgur.intershop.system.valid.ValidUUID;
+import ru.alexgur.intershop.user.model.CustomUserDetails;
 
 @Controller
 @RequiredArgsConstructor
@@ -35,17 +37,21 @@ public class ItemController {
 
     @PostMapping("/items/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<ServerResponse> createItem(@Valid @RequestBody Mono<ItemNewDto> item) {
+    public Mono<ServerResponse> createItem(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @Valid @RequestBody Mono<ItemNewDto> item) {
         return itemService.add(item)
-                .flatMap(itemService::addCartInfo)
+                .flatMap(x -> itemService.addCartInfo(x, userDetails.getUserId()))
                 .then(ServerResponse.seeOther(URI.create("/"))
                         .build());
     }
 
     @GetMapping("/items/{id}")
-    public Mono<Rendering> getItem(@PathVariable @ValidUUID UUID id) {
+    public Mono<Rendering> getItem(
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @PathVariable @ValidUUID UUID id) {
         return itemService.get(id)
-                .flatMap(itemService::addCartInfo)
+                .flatMap(x -> itemService.addCartInfo(x, userDetails.getUserId()))
                 .map(data -> Rendering.view("item")
                 .modelAttribute("item", data)
                 .build());
@@ -53,13 +59,14 @@ public class ItemController {
 
     @GetMapping
     public Mono<Rendering> getAll(
-            @RequestParam(required = false) String search,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+                    @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "NO") SortType sort,
             @RequestParam(defaultValue = "10") @Positive Integer pageSize,
             @RequestParam(defaultValue = "1") @Positive Integer pageNumber) {
 
             Mono<SimplePage<ItemDto>> page = itemService.getAll(pageNumber - 1,
-                            pageSize, search, sort).flatMap(itemService::addCartInfo);
+                            pageSize, search, sort).flatMap(x -> itemService.addCartInfo(x, userDetails.getUserId()));
 
         return page.map(data -> Rendering.view("main")
                         .modelAttribute("items", Flux.fromIterable(data.getContent()).buffer(3))

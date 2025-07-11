@@ -6,9 +6,18 @@ CREATE TABLE IF NOT EXISTS items (
     price FLOAT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    login varchar(255) NOT NULL,
+    password varchar(255) NOT NULL,
+	active boolean NOT NULL DEFAULT TRUE,
+	roles varchar(255) NOT NULL,
+);
+
 CREATE TABLE IF NOT EXISTS orders (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     is_paid BOOLEAN NOT NULL DEFAULT FALSE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
     delivery_address VARCHAR(255),
     contact_phone VARCHAR(20),
     contact_email VARCHAR(100)

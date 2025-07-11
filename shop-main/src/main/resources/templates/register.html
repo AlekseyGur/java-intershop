@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+</head>
+
+<body>
+<div class="" style="max-width: 400px; margin: 50px auto;">
+    <div class="">
+        <div class="">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title text-center">Регистрация</h3>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/register}" th:object="${user}" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username"
+                                th:field="*{username}" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('username')}"
+                                th:errors="*{username}"></small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="password"
+                                th:field="*{password}" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('password')}"
+                                th:errors="*{password}"></small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                    </div>
+                </form>
+                <div class="mt-3 text-center">
+                    <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

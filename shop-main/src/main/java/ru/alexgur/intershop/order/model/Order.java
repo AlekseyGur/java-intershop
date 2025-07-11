@@ -18,6 +18,9 @@ public class Order {
     @Id
     private UUID id;
 
+    @Column("user_id")
+    private UUID userId;
+
     @Column("is_paid")
     private Boolean isPaid = false;
 
