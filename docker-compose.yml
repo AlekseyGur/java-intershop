@@ -15,10 +15,15 @@ services:
       - SPRING_DATA_REDIS_TIMEOUT=PT10S
       - SPRING_LIQUIBASE_CHANGELOG=classpath:liquibase/db.changelog-master.yml
       - SPRING_LIQUIBASE_ENABLED=true
+      - KEYCLOAK_CLIENT_SECRET=${CLIENT_SECRET}
+      - KEYCLOAK_CLIENT_ID=intershop
+      - KEYCLOAK_ISSUE_URL=http://keycloak:8080/realms/master
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
 
   payment-service:
@@ -26,6 +31,9 @@ services:
     build: ./shop-payment
     ports:
       - "8081:8081"
+    depends_on:
+      keycloak:
+        condition: service_healthy
 
   db:
     container_name: db
@@ -52,3 +60,19 @@ services:
       - "6379:6379"
     command: redis-server --save 60 1 --loglevel warning
  
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME=keycloak
+    ports:
+      - "8082:8080"
+    command:
+      - start-dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/realms/master >/dev/null 2>&1 || exit 1"]        
+      interval: 10s
+      timeout: 5s
+      retries: 5
