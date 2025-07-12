@@ -13,8 +13,8 @@ import ru.alexgur.intershop.order.model.Order;
 
 @Repository
 public interface OrderRepository extends R2dbcRepository<Order, UUID> {
-    @Query("SELECT * FROM orders WHERE is_paid = false ORDER BY id DESC LIMIT 1")
-    Mono<Order> findFirstByIsPaidFalseOrderByIdDesc();
+    @Query("SELECT * FROM orders WHERE is_paid = false AND user_id = :userId ORDER BY id DESC LIMIT 1")
+    Mono<Order> findFirstByIsPaidFalseOrderByIdDesc(@Param("userId") UUID userId);
 
     Flux<Order> findAllByIsPaidTrue();
 

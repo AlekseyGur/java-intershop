@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,15 +23,12 @@ import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.order.dto.OrderDto;
-import ru.alexgur.intershop.order.repository.OrderRepository;
+import ru.alexgur.intershop.user.model.CustomUserDetails;
 import ru.alexgur.payment.model.Balance;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
 class OrderServiceImplTest extends BaseTest {
-
-    @Autowired
-    private OrderRepository orderRepository;
 
     @Autowired
     private OrderServiceImpl orderServiceImpl;
@@ -40,18 +38,25 @@ class OrderServiceImplTest extends BaseTest {
 
     UUID firstSavedItemId;
     ItemDto firstSavedItem;
+    CustomUserDetails userSimple;
+    CustomUserDetails userAdmin;
 
     @BeforeEach
     public void getFirstSavedItemId() {
         firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
         firstSavedItemId = firstSavedItem.getId();
+
+        userAdmin = customReactiveUserDetailsService.findByUsernameAllInfo("admin").block();
+        userSimple = customReactiveUserDetailsService.findByUsernameAllInfo("user").block();
     }
 
     void changeItemCountInCartUsingEndpont(String action) {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", action);
 
-        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
@@ -64,7 +69,9 @@ class OrderServiceImplTest extends BaseTest {
         Balance balanceEntity = new Balance(firstSavedItem.getPrice() + 100.0);
         when(paymentService.getBalance()).thenReturn(Mono.just(balanceEntity));
 
-        webTestClient.post().uri("/cart/buy")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/orders");
@@ -75,7 +82,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("PLUS");
         createOrderUsingEndpont();
 
-        List<OrderDto> order = orderServiceImpl.getAll().collectList().block();
+        List<OrderDto> order = orderServiceImpl.getAll(userSimple.getUserId()).collectList().block();
 
         assertThat(order).isNotNull();
 
@@ -88,7 +95,7 @@ class OrderServiceImplTest extends BaseTest {
     void testCartAddOneItem() {
         changeItemCountInCartUsingEndpont("PLUS");
 
-        OrderDto order = orderServiceImpl.getCart().block();
+        OrderDto order = orderServiceImpl.getCart(userSimple.getUserId()).block();
 
         assertThat(order).isNotNull();
 
@@ -104,7 +111,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("PLUS");
         changeItemCountInCartUsingEndpont("PLUS");
 
-        OrderDto order = orderServiceImpl.getCart().block();
+        OrderDto order = orderServiceImpl.getCart(userSimple.getUserId()).block();
 
         assertThat(order.getItems().get(0).getQuantity()).isEqualTo(2);
     }
@@ -115,7 +122,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("pluS");
         changeItemCountInCartUsingEndpont("MiNuS");
 
-        OrderDto order = orderServiceImpl.getCart().block();
+        OrderDto order = orderServiceImpl.getCart(userSimple.getUserId()).block();
 
         assertThat(order.getItems().get(0).getQuantity()).isEqualTo(1);
     }
@@ -127,7 +134,7 @@ class OrderServiceImplTest extends BaseTest {
         changeItemCountInCartUsingEndpont("MiNuS");
         changeItemCountInCartUsingEndpont("MiNuS");
 
-        OrderDto order = orderServiceImpl.getCart().block();
+        OrderDto order = orderServiceImpl.getCart(userSimple.getUserId()).block();
 
         assertThat(order.getItems().size()).isEqualTo(0);
     }

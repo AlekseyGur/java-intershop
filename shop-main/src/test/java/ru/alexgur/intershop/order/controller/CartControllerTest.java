@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,7 @@ import ru.alexgur.intershop.item.model.ActionType;
 import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.system.exception.PaymentException;
+import ru.alexgur.intershop.user.model.CustomUserDetails;
 import ru.alexgur.payment.model.Balance;
 
 @SpringBootTest
@@ -32,16 +34,23 @@ class CartControllerTest extends BaseTest {
 
     UUID firstSavedItemId;
     ItemDto firstSavedItem;
+    CustomUserDetails userSimple;
+    CustomUserDetails userAdmin;
 
     @BeforeEach
     public void getFirstSavedItemId() {
         firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
         firstSavedItemId = firstSavedItem.getId();
+
+        userAdmin = customReactiveUserDetailsService.findByUsernameAllInfo("admin").block();
+        userSimple = customReactiveUserDetailsService.findByUsernameAllInfo("user").block();
     }
 
     @Test
     public void getCartItems() throws Exception {
-        webTestClient.get().uri("/cart")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .get().uri("/cart")
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
@@ -49,7 +58,9 @@ class CartControllerTest extends BaseTest {
 
     @Test
     public void updateCartItemQuantity() throws Exception {
-        webTestClient.get().uri("/cart")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .get().uri("/cart")
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
@@ -57,14 +68,18 @@ class CartControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/cart");
 
-        webTestClient.get().uri("/cart")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .get().uri("/cart")
                 .exchange()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
@@ -79,14 +94,18 @@ class CartControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/cart");
 
-        webTestClient.post().uri("/cart/buy")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/orders");
@@ -101,14 +120,18 @@ class CartControllerTest extends BaseTest {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
 
-        webTestClient.post().uri("/cart/items/" + firstSavedItemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/items/" + firstSavedItemId)
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(params)
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/cart");
 
-        webTestClient.post().uri("/cart/buy")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(userSimple))
+                .post().uri("/cart/buy")
                 .exchange()
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/error\\?reason=low_balance");

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     login varchar(255) NOT NULL,
     password varchar(255) NOT NULL,
 	active boolean NOT NULL DEFAULT TRUE,
-	roles varchar(255) NOT NULL,
+	roles varchar(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS orders (

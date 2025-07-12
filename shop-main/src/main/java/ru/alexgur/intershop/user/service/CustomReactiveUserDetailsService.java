@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.user.model.CustomUserDetails;
+import ru.alexgur.intershop.user.model.User;
 import ru.alexgur.intershop.user.repository.UserRepository;
 
 import java.util.Arrays;
@@ -21,16 +22,26 @@ public class CustomReactiveUserDetailsService implements ReactiveUserDetailsServ
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return userRepository.findByLogin(username)
-                .map(user -> CustomUserDetails.customUserDetailsBuilder()
-                        .userId(user.getId())
-                        .login(user.getLogin())
-                        .password(user.getPassword())
-                        .authorities(Arrays.stream(user.getRoles().split(","))
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList())
-                        .accountNonExpired(user.isActive())
-                        .credentialsNonExpired(user.isActive())
-                        .accountNonLocked(user.isActive())
-                        .enabled(user.isActive())
-                        .build());
+                .map(this::fromUserToCustomUserDetails);
+    }
+
+    public Mono<CustomUserDetails> findByUsernameAllInfo(String username) {
+        return userRepository.findByLogin(username)
+                .map(this::fromUserToCustomUserDetails);
+    }
+
+    private CustomUserDetails fromUserToCustomUserDetails(User user) {
+        return CustomUserDetails.customUserDetailsBuilder()
+                .userId(user.getId())
+                .login(user.getLogin())
+                .password(user.getPassword())
+                .authorities(Arrays.stream(user.getRoles().split(","))
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .toList())
+                .accountNonExpired(user.isActive())
+                .credentialsNonExpired(user.isActive())
+                .accountNonLocked(user.isActive())
+                .enabled(user.isActive())
+                .build();
     }
 }

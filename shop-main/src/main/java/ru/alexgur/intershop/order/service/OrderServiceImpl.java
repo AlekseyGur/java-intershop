@@ -152,13 +152,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<OrderDto> getCart(UUID userId) {
-        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
+        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc(userId)
                 .flatMap(this::convertOrderToOrderDto);
     }
 
     @Override
     public Mono<OrderDto> getCartOrCreateNew(UUID userId) {
-        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc()
+        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc(userId)
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(createOrder());
     }

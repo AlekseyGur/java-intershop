@@ -1,3 +1,5 @@
+-- Items
+
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 1', 'Описание item 1', '/images/item1.jpg', 100.0);
 
@@ -27,3 +29,10 @@ VALUES ('Item 9', 'Описание item 9', '/images/item9.jpg', 900);
 
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 1', 'Description item 1', '/images/item1.jpg', 100);
+
+-- Users
+
+INSERT INTO users (login, password, active, roles) 
+VALUES 
+    ('admin', '$2a$10$examplehash1234567890', TRUE, 'ROLE_ADMIN'),
+    ('user', '$2a$10$anotherexamplehash', TRUE, 'ROLE_USER');

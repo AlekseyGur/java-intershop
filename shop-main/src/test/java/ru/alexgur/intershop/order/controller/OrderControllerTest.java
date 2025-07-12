@@ -7,6 +7,7 @@ import ru.alexgur.intershop.item.model.SortType;
 import ru.alexgur.intershop.item.service.ItemServiceImpl;
 import ru.alexgur.intershop.order.dto.OrderDto;
 import ru.alexgur.intershop.order.service.OrderServiceImpl;
+import ru.alexgur.intershop.user.model.CustomUserDetails;
 import ru.alexgur.payment.model.Balance;
 
 import java.util.List;
@@ -39,11 +40,16 @@ class OrderControllerTest extends BaseTest {
 
     UUID firstSavedItemId;
     ItemDto firstSavedItem;
+    CustomUserDetails userSimple;
+    CustomUserDetails userAdmin;
 
     @BeforeEach
     public void getFirstSavedItemId() {
         firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
         firstSavedItemId = firstSavedItem.getId();
+
+        userAdmin = customReactiveUserDetailsService.findByUsernameAllInfo("admin").block();
+        userSimple = customReactiveUserDetailsService.findByUsernameAllInfo("user").block();
     }
 
     @Test
@@ -92,7 +98,7 @@ class OrderControllerTest extends BaseTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueMatches("Location", "/orders");
 
-        List<OrderDto> orders = orderServiceImpl.getAll().collectList().block();
+        List<OrderDto> orders = orderServiceImpl.getAll(userSimple.getUserId()).collectList().block();
 
         assertThat(orders).isNotNull();
 
