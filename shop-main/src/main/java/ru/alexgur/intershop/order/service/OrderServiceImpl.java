@@ -37,13 +37,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Flux<OrderDto> getAll(UUID userId) {
-        return orderRepository.findAllByIsPaidTrue()
+        return orderRepository.findAllByIsPaidTrueAndUserId(userId)
                 .flatMap(this::convertOrderToOrderDto);
     }
 
     @Override
     public Mono<OrderDto> get(UUID orderId, UUID userId) {
-        return orderRepository.findById(orderId)
+        return orderRepository.findByIdAndUserId(orderId, userId)
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")));
     }
@@ -56,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<Void> removeItemFromOrder(UUID orderId, UUID orderItemId, UUID userId) {
-        return orderRepository.findById(orderId)
+        return orderRepository.findByIdAndUserId(orderId, userId)
                 .switchIfEmpty(Mono.error(new NotFoundException("Заказ не найден")))
                 .flatMap(foundOrder -> {
                     if (foundOrder.getIsPaid()) {
@@ -152,13 +152,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<OrderDto> getCart(UUID userId) {
-        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc(userId)
+        return orderRepository.findFirstByIsPaidFalseAndUserIdOrderByIdDesc(userId)
                 .flatMap(this::convertOrderToOrderDto);
     }
 
     @Override
     public Mono<OrderDto> getCartOrCreateNew(UUID userId) {
-        return orderRepository.findFirstByIsPaidFalseOrderByIdDesc(userId)
+        return orderRepository.findFirstByIsPaidFalseAndUserIdOrderByIdDesc(userId)
                 .flatMap(this::convertOrderToOrderDto)
                 .switchIfEmpty(createOrder());
     }

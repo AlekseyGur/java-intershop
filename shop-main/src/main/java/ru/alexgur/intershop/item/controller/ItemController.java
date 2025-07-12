@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +38,7 @@ public class ItemController {
 
     @PostMapping("/items/create")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN')")
     public Mono<ServerResponse> createItem(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @RequestBody Mono<ItemNewDto> item) {
@@ -51,7 +53,12 @@ public class ItemController {
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable @ValidUUID UUID id) {
         return itemService.get(id)
-                .flatMap(x -> itemService.addCartInfo(x, userDetails.getUserId()))
+                .flatMap(x -> {
+                    if (userDetails != null) {
+                        return itemService.addCartInfo(x, userDetails.getUserId());
+                    }
+                    return Mono.just(x);
+                })
                 .map(data -> Rendering.view("item")
                 .modelAttribute("item", data)
                 .build());
@@ -66,7 +73,13 @@ public class ItemController {
             @RequestParam(defaultValue = "1") @Positive Integer pageNumber) {
 
             Mono<SimplePage<ItemDto>> page = itemService.getAll(pageNumber - 1,
-                            pageSize, search, sort).flatMap(x -> itemService.addCartInfo(x, userDetails.getUserId()));
+                    pageSize, search, sort)
+                    .flatMap(x -> {
+                        if (userDetails != null) {
+                            return itemService.addCartInfo(x, userDetails.getUserId());
+                        }
+                        return Mono.just(x);
+                    });
 
         return page.map(data -> Rendering.view("main")
                         .modelAttribute("items", Flux.fromIterable(data.getContent()).buffer(3))

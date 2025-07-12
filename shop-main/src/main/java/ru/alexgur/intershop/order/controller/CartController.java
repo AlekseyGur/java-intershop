@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ public class CartController {
     private final OrderService orderService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<Rendering> getCartItems(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return orderService.getCartOrCreateNew(userDetails.getUserId())
                 .flatMap(orderDto -> {
@@ -40,6 +42,7 @@ public class CartController {
     }
 
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<String> updateCartItemQuantity(
             @AuthenticationPrincipal CustomUserDetails userDetails,
                     @PathVariable @ValidUUID UUID id,
@@ -49,6 +52,7 @@ public class CartController {
     }
 
     @PostMapping("/buy")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<String> buyItems(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return orderService.buyItems(userDetails.getUserId())
                 .thenReturn("redirect:/orders")

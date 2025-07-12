@@ -3,6 +3,7 @@ package ru.alexgur.intershop.order.controller;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<String> updateCartItemQuantity(
             @AuthenticationPrincipal CustomUserDetails userDetails,
                     @PathVariable @ValidUUID UUID id,
@@ -36,6 +38,7 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<Rendering> getCartItems(@AuthenticationPrincipal CustomUserDetails userDetails) {
         Flux<OrderDto> data = orderService.getAll(userDetails.getUserId());
 
@@ -45,6 +48,7 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{orderId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<Rendering> getById(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable @ValidUUID UUID orderId) {
