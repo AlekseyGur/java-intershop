@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-    login varchar(255) NOT NULL,
+    username varchar(255) NOT NULL,
     password varchar(255) NOT NULL,
 	active boolean NOT NULL DEFAULT TRUE,
 	roles varchar(255) NOT NULL

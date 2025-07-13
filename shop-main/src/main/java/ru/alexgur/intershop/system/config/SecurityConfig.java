@@ -48,9 +48,17 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) {
         return http
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/", "/register", "/login", "/main/items", "/items")
+                        .pathMatchers(
+                                "/",
+                                "/register",
+                                "/login",
+                                "/main/items",
+                                "/items")
                         .permitAll()
                         .pathMatchers(HttpMethod.GET, "/items/{id:" + UUID_REGEX + "}")
+                        .permitAll()
+                        .pathMatchers(
+                                "/images/**")
                         .permitAll()
                         .anyExchange().authenticated())
                 .formLogin(Customizer.withDefaults())

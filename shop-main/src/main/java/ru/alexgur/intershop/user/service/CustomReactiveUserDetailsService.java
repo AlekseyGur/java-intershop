@@ -21,19 +21,19 @@ public class CustomReactiveUserDetailsService implements ReactiveUserDetailsServ
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return userRepository.findByLogin(username)
+        return userRepository.findByUsername(username)
                 .map(this::fromUserToCustomUserDetails);
     }
 
     public Mono<CustomUserDetails> findByUsernameAllInfo(String username) {
-        return userRepository.findByLogin(username)
+        return userRepository.findByUsername(username)
                 .map(this::fromUserToCustomUserDetails);
     }
 
     private CustomUserDetails fromUserToCustomUserDetails(User user) {
         return CustomUserDetails.customUserDetailsBuilder()
                 .userId(user.getId())
-                .login(user.getLogin())
+                .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(Arrays.stream(user.getRoles().split(","))
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role))

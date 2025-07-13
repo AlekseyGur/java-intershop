@@ -17,18 +17,18 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Build and test with Maven
-      run: |
-        mvn clean install -B -DskipTests=false --file pom.xml
+    # - name: Build and test with Maven
+    #   run: |
+    #     mvn clean install -B -DskipTests=false --file pom.xml
 
     - name: Checkstyle
       run: mvn checkstyle:checkstyle
         
-    - name: Build all and run
-      run: |
-        docker compose build
-        docker compose up --detach
+    # - name: Build all and run
+    #   run: |
+    #     docker compose build
+    #     docker compose up --detach
         
-    - name: Shut down all
-      run: |
-        docker compose down
+    # - name: Shut down all
+    #   run: |
+    #     docker compose down

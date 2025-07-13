@@ -22,8 +22,10 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
-      - KC_HOSTNAME=keycloak
+      - KC_HOSTNAME=localhost
     ports:
-      - "8082:8080"
+      - "8082:8080"  # HTTP
+      - "8443:8443"  # HTTPS
+      - "7600:7600"  # Metrics
     command:
       - start-dev

@@ -15,16 +15,16 @@ public class CustomUserDetails extends User {
     private UUID userId;
 
     @Builder(builderMethodName = "customUserDetailsBuilder")
-    public CustomUserDetails(String login,
-            String password,
+    public CustomUserDetails(String username,
+                            String password,
                     boolean enabled,
             boolean accountNonExpired,
             boolean credentialsNonExpired,
             boolean accountNonLocked,
             Collection<? extends GrantedAuthority> authorities,
             UUID userId) {
-        super(login,
-                password,
+            super(username,
+                                password,
                 enabled,
                 accountNonExpired,
                 credentialsNonExpired,

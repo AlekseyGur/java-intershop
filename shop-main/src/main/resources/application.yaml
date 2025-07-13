@@ -7,7 +7,7 @@ payment:
 
 logging:
   level:
-    root: INFO
+    root: DEBUG
     org:
       springframework:
         r2dbc: INFO
@@ -82,7 +82,7 @@ spring:
     oauth2:
       client:
         # Keycloak OAuth2 Client Configuration
-        provider.keycloak.issuer-uri: ${KEYCLOAK_ISSUE_URL:http://keycloak:8080/realms/master}
+        provider.keycloak.issuer-uri: ${KEYCLOAK_ISSUE_URL:http://localhost:8082/realms/master}
 
         # Client Registration
         registration:

@@ -3,11 +3,9 @@ package ru.alexgur.intershop;
 import static org.junit.Assert.*;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +14,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -30,11 +25,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-
 import com.redis.testcontainers.RedisContainer;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
@@ -51,14 +44,8 @@ import static org.hamcrest.CoreMatchers.is;
 @AutoConfigureWebTestClient
 public class BaseTest {
 
-    // @Autowired
-    // private RestTemplate restTemplate;
-
     @Autowired
     public ReactiveWebApplicationContext reactiveWebApplicationContext;
-
-    @Autowired
-    public CustomReactiveUserDetailsService customReactiveUserDetailsService;
 
     @Autowired
     public WebTestClient webTestClient;
@@ -68,6 +55,9 @@ public class BaseTest {
 
     @MockitoBean
     public PaymentService paymentService;
+
+    @MockitoBean
+    public CustomReactiveUserDetailsService customReactiveUserDetailsService;
 
     @Autowired
     public CacheManager cacheManager;
@@ -80,29 +70,48 @@ public class BaseTest {
             .withUsername("intershop-test")
             .withPassword("intershop-test");
 
-    private static final KeycloakContainer keycloak = new KeycloakContainer()
-            .withRealmImportFile("keycloak-export.json");
+    private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:latest")
+            .withRealmImportFile("development-realm.json");
 
     static {
         postgres.start();
         redis.start();
         keycloak.start();
+        waitServiceToBeReady(keycloak.getAuthServerUrl());
     }
 
+    private static void waitServiceToBeReady(String healthCheckUrl) {
+        boolean ready = false;
+        while (!ready) {
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<String> response = restTemplate.getForEntity(healthCheckUrl, String.class);
+                if (response.getStatusCode() == HttpStatus.OK && response.hasBody()) {
+                    ready = true;
+                }
+            } catch (Exception ex) {
+                System.err.println("Waiting for Keycloak to start...");
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
+            }
+        }
+        System.out.println("Keycloak is now fully ready.");
+    }
 
     @AfterEach
     @BeforeEach
     void cleanDb() {
         cacheManager.getCacheNames().forEach(x -> cacheManager.getCache(x).clear());
-        // createUserInKeycloak();
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
     }
 
     @DynamicPropertySource
     static void registerKeycloakProperties(DynamicPropertyRegistry registry) {
-        String host = keycloak.getHost();
-        int port = keycloak.getHttpPort();
         String authServerUrl = keycloak.getAuthServerUrl();
 
         registry.add("keycloak.auth-server-url", () -> authServerUrl);
@@ -111,13 +120,13 @@ public class BaseTest {
         registry.add("keycloak.credentials.secret", () -> "your_secret_here");
         registry.add("keycloak.ssl.required", () -> "none");
 
-        System.out.println("===============================");
+        System.out.println("=========================");
         System.out.println("Keycloak URL: " + authServerUrl);
         System.out.println("Realm: master");
         System.out.println("Resource: test-app");
         System.out.println("Credentials Secret: your_secret_here");
         System.out.println("SSL Required: none");
-        System.out.println("===============================");
+        System.out.println("=========================");
     }
 
     @DynamicPropertySource
@@ -149,6 +158,7 @@ public class BaseTest {
         registry.add("spring.r2dbc.password", postgres::getPassword);
 
         System.out.println("=========================");
+        System.out.println("Postgres:");
         System.out.println("docker exec -it " + containerId + " psql -U " + username + " -d " + dbName);
         System.out.println("=========================");
     }
@@ -180,47 +190,4 @@ public class BaseTest {
         assertTrue(responseBody.contains("</html>"), "Ответ должен содержать закрывающий тег </html>");
     }
 
-    // private void createUserInKeycloak() {
-    // String adminToken = getAdminToken(keycloak.getAuthServerUrl());
-
-    // Map<String, Object> userPayload = new HashMap<>();
-    // userPayload.put("username", "test-user");
-    // userPayload.put("email", "test@example.com");
-    // userPayload.put("firstName", "John");
-    // userPayload.put("lastName", "Doe");
-    // userPayload.put("enabled", true);
-    // List<Map<String, Object>> credentials = Arrays.asList(
-    // Map.of("type", "password", "value", "password123", "temporary", false));
-    // userPayload.put("credentials", credentials);
-
-    // ResponseEntity<Void> response = restTemplate.exchange(
-    // keycloak.getAuthServerUrl() + "/admin/realms/" + keycloak.MASTER_REALM +
-    // "/users",
-    // HttpMethod.POST,
-    // new HttpEntity<>(userPayload, headers(adminToken)),
-    // Void.class);
-
-    // assertEquals(HttpStatus.CREATED, response.getStatusCode()); // Проверяем
-    // успешность операции
-    // }
-
-    // private String getAdminToken(String serverUrl) {
-    // LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-    // params.set("username", "admin");
-    // params.set("password", "admin");
-    // params.set("grant_type", "password");
-    // params.set("client_id", "admin-cli");
-
-    // ResponseEntity<Map> response = restTemplate
-    // .postForEntity(serverUrl + "/realms/master/protocol/openid-connect/token",
-    // params, Map.class);
-    // return (String) response.getBody().get("access_token");
-    // }
-
-    // private HttpHeaders headers(String token) {
-    // HttpHeaders headers = new HttpHeaders();
-    // headers.setBearerAuth(token);
-    // headers.setContentType(MediaType.APPLICATION_JSON);
-    // return headers;
-    // }
 }
