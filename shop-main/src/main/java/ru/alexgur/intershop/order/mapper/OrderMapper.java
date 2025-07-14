@@ -14,6 +14,7 @@ public class OrderMapper {
         }
         OrderDto dto = new OrderDto();
         dto.setId(order.getId());
+        dto.setUserId(order.getUserId());
         dto.setDeliveryAddress(order.getDeliveryAddress());
         dto.setContactPhone(order.getContactPhone());
         dto.setContactEmail(order.getContactEmail());
@@ -27,6 +28,7 @@ public class OrderMapper {
         }
         Order order = new Order();
         order.setId(dto.getId());
+        order.setUserId(dto.getUserId());
         order.setDeliveryAddress(dto.getDeliveryAddress());
         order.setContactPhone(dto.getContactPhone());
         order.setContactEmail(dto.getContactEmail());

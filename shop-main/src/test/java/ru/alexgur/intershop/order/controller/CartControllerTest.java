@@ -131,9 +131,9 @@ class CartControllerTest extends BaseTest {
 
     @Test
     public void buy() throws Exception {
-        when(paymentService.doPayment(anyDouble())).thenReturn(Mono.empty());
+            when(paymentService.doPayment(any(), anyDouble())).thenReturn(Mono.empty());
         Balance balanceEntity = new Balance(firstSavedItem.getPrice() + 100.0);
-        when(paymentService.getBalance()).thenReturn(Mono.just(balanceEntity));
+        when(paymentService.getBalance(any())).thenReturn(Mono.just(balanceEntity));
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("action", ActionType.PLUS.toString());
@@ -158,7 +158,7 @@ class CartControllerTest extends BaseTest {
 
     @Test
     public void buyNotEnoughMoneyError() throws Exception {
-        when(paymentService.doPayment(anyDouble()))
+            when(paymentService.doPayment(any(), anyDouble()))
                 .thenReturn(Mono.error(new PaymentException("Ошибка выполнения платежа")));
 
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();

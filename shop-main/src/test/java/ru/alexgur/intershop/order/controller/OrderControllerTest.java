@@ -74,9 +74,9 @@ class OrderControllerTest extends BaseTest {
 
     @Test
     public void getOrderById() throws Exception {
-        when(paymentService.doPayment(anyDouble())).thenReturn(Mono.empty());
+            when(paymentService.doPayment(any(), anyDouble())).thenReturn(Mono.empty());
         Balance balanceEntity = new Balance(firstSavedItem.getPrice() + 100.0);
-        when(paymentService.getBalance()).thenReturn(Mono.just(balanceEntity));
+        when(paymentService.getBalance(any())).thenReturn(Mono.just(balanceEntity));
 
         webTestClient.get().uri("/cart")
                 .exchange()

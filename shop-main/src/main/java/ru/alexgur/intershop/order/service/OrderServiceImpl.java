@@ -135,7 +135,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Mono<OrderDto> doPayment(OrderDto order) {
-        return paymentService.doPayment(order.getTotalSum())
+        return paymentService.doPayment(order.getUserId(), order.getTotalSum())
                 .onErrorMap(x -> new PaymentException("Заказ не оплачен"))
                 .then(setOrderPaid(order));
     }

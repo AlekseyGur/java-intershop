@@ -13,6 +13,7 @@ import ru.alexgur.intershop.item.dto.ItemDto;
 @ToString
 public class OrderDto {
     private UUID id;
+    private UUID userId;
     private Boolean isPaid = false;
     private List<ItemDto> items = List.of();
     private String deliveryAddress;
