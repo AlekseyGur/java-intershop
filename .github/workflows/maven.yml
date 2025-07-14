@@ -17,9 +17,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    # - name: Build and test with Maven
-    #   run: |
-    #     mvn clean install -B -DskipTests=false --file pom.xml
+    - name: Build and test with Maven
+      run: |
+        mvn clean install -B -DskipTests=false --file pom.xml
 
     - name: Checkstyle
       run: mvn checkstyle:checkstyle
