@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import ru.alexgur.payment.model.Balance;
 import ru.alexgur.payment.repository.BalanceRepository;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
@@ -28,7 +29,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.getCurrentBalance())
                         .thenReturn(Mono.just(new Balance(2000.0)));
 
-        webTestClient.get()
+        webTestClient.mutateWith(mockJwt())
+                .get()
                 .uri("/payments/balance")
                 .exchange()
                 .expectStatus().isOk()
@@ -49,7 +51,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.updateBalance(testBalance.getAmount() - paymentAmount))
                 .thenReturn(Mono.just(updatedBalance));
 
-        webTestClient.post()
+        webTestClient.mutateWith(mockJwt())
+                .post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/payments/pay")
                         .queryParam("amount", paymentAmount)
@@ -68,7 +71,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.getCurrentBalance())
                 .thenReturn(Mono.just(testBalance));
 
-        webTestClient.post()
+        webTestClient.mutateWith(mockJwt())
+                .post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/payments/pay")
                         .queryParam("amount", paymentAmount)
