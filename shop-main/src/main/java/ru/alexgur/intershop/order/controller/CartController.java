@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.reactive.result.view.Rendering;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.item.dto.ItemDto;
 import ru.alexgur.intershop.order.service.OrderService;
@@ -24,12 +25,14 @@ import ru.alexgur.intershop.user.model.CustomUserDetails;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/cart")
+@Slf4j
 public class CartController {
     private final OrderService orderService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public Mono<Rendering> getCartItems(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        log.error(userDetails.toString());
         return orderService.getCartOrCreateNew(userDetails.getUserId())
                 .flatMap(orderDto -> {
                     List<ItemDto> items = orderDto.getItems();

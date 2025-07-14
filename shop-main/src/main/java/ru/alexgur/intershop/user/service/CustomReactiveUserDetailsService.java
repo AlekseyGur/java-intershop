@@ -25,23 +25,18 @@ public class CustomReactiveUserDetailsService implements ReactiveUserDetailsServ
                 .map(this::fromUserToCustomUserDetails);
     }
 
-    public Mono<CustomUserDetails> findByUsernameAllInfo(String username) {
-        return userRepository.findByUsername(username)
-                .map(this::fromUserToCustomUserDetails);
-    }
-
     private CustomUserDetails fromUserToCustomUserDetails(User user) {
-        return CustomUserDetails.customUserDetailsBuilder()
+        return CustomUserDetails.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .authorities(Arrays.stream(user.getRoles().split(","))
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                         .toList())
+                .enabled(user.isActive())
                 .accountNonExpired(user.isActive())
                 .credentialsNonExpired(user.isActive())
                 .accountNonLocked(user.isActive())
-                .enabled(user.isActive())
                 .build();
     }
 }

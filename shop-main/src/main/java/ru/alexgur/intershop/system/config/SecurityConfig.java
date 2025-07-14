@@ -24,7 +24,9 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableMethodSecurity(securedEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, // Включаем поддержку @PreAuthorize и @PostAuthorize
+        securedEnabled = true // Опционально, если нужна поддержка @Secured
+)
 public class SecurityConfig {
 
     private static final String UUID_REGEX = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";
@@ -57,8 +59,7 @@ public class SecurityConfig {
                         .permitAll()
                         .pathMatchers(HttpMethod.GET, "/items/{id:" + UUID_REGEX + "}")
                         .permitAll()
-                        .pathMatchers(
-                                "/images/**")
+                        .pathMatchers("/images/**")
                         .permitAll()
                         .anyExchange().authenticated())
                 .formLogin(Customizer.withDefaults())

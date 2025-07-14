@@ -48,8 +48,8 @@ class OrderControllerTest extends BaseTest {
         firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
         firstSavedItemId = firstSavedItem.getId();
 
-        userAdmin = customReactiveUserDetailsService.findByUsernameAllInfo("admin").block();
-        userSimple = customReactiveUserDetailsService.findByUsernameAllInfo("user").block();
+        // userAdmin = customReactiveUserDetailsService.findByUsername("admin").block();
+        // userSimple = customReactiveUserDetailsService.findByUsername("user").block();
     }
 
     @Test

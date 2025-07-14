@@ -32,12 +32,4 @@ public class TestSecurityConfig {
         return new InMemoryReactiveClientRegistrationRepository(registration);
     }
 
-    // @Bean
-    // SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-    // return http
-    // .authorizeExchange(exchanges -> exchanges
-    // .pathMatchers("/cart").hasRole("USER")
-    // .anyExchange().authenticated())
-    // .build();
-    // }
 }

@@ -3,7 +3,6 @@ package ru.alexgur.intershop.order.controller;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -11,18 +10,18 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.mockito.Mockito;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.security.core.Authentication;
-
 import reactor.core.publisher.Mono;
 import ru.alexgur.intershop.BaseTest;
 import ru.alexgur.intershop.item.dto.ItemDto;
@@ -45,75 +44,42 @@ class CartControllerTest extends BaseTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private SecurityWebFilterChain securityFilterChain;
+
     UUID firstSavedItemId;
     ItemDto firstSavedItem;
     User userSimple;
     User userAdmin;
     CustomUserDetails userSimpleCustom;
     CustomUserDetails userAdminCustom;
+    protected UUID testUserId;
+    protected CustomUserDetails mockUser;
 
     @BeforeEach
     public void getFirstSavedItemId() {
         firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
         firstSavedItemId = firstSavedItem.getId();
 
-        userAdmin = new User(
-                UUID.fromString("1e0408ff-d416-4a42-829f-54bcec748c11"),
-                "admin",
-                "$2a$10$MfwZEA6sSlMYZ9pnu3moG.M1SQ7wrAWi3MKTNOKKLBKLvLJZ1a9Ya",
-                true,
-                "ADMIN");
-
-        userSimple = new User(
-                UUID.fromString("b41f2a31-f2aa-42cd-b86a-e7db862e1bb5"),
-                "user",
-                "$2a$10$MfwZEA6sSlMYZ9pnu3moG.M1SQ7wrAWi3MKTNOKKLBKLvLJZ1a9Ya",
-                true,
-                "USER");
-
-        userAdminCustom = CustomUserDetails.customUserDetailsBuilder()
-                .userId(userAdmin.getId())
-                .username(userAdmin.getUsername())
-                .password(userAdmin.getPassword())
-                .authorities(Collections.singleton(new SimpleGrantedAuthority("ROLE_ADMIN")))
-                .accountNonExpired(true)
-                .credentialsNonExpired(true)
-                .accountNonLocked(true)
-                .enabled(true)
-                .build();
-
-        userSimpleCustom = CustomUserDetails.customUserDetailsBuilder()
-                .userId(userSimple.getId())
-                .username(userSimple.getUsername())
-                .password(userSimple.getPassword())
-                .authorities(Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")))
-                .accountNonExpired(true)
-                .credentialsNonExpired(true)
-                .accountNonLocked(true)
-                .enabled(true)
-                .build();
-
-        userRepository.save(userAdmin).subscribe();
-        userRepository.save(userSimple).subscribe();
-    }
-
-    protected UUID testUserId;
-    protected CustomUserDetails mockUser;
-
-    @BeforeEach
-    void setUp() {
         User userEntity = User.builder()
                 .username("test")
-                .password("test")
+                .password(passwordEncoder.encode("test"))
                 .active(true)
                 .roles("USER")
                 .build();
         this.testUserId = Objects.requireNonNull(userRepository.save(userEntity).block()).getId();
-        this.mockUser = CustomUserDetails.customUserDetailsBuilder()
+        this.mockUser = CustomUserDetails.builder()
                 .userId(this.testUserId)
                 .username("test")
-                .password("test")
+                .password(passwordEncoder.encode("test"))
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
+                .enabled(true)
+                .accountNonExpired(true)
+                .credentialsNonExpired(true)
+                .accountNonLocked(true)
                 .build();
     }
 
@@ -124,17 +90,10 @@ class CartControllerTest extends BaseTest {
 
     @Test
     public void getCartItems() throws Exception {
-        SecurityContextHolder.clearContext();
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                mockUser,
-                null,
-                mockUser.getAuthorities());
-
-        // SecurityContextHolder.getContext().setAuthentication(authentication);
+        Mockito.when(customReactiveUserDetailsService.findByUsername(anyString())).thenReturn(Mono.just(mockUser));
 
         webTestClient
-                .mutateWith(SecurityMockServerConfigurers.mockAuthentication(authentication))
+                .mutateWith(SecurityMockServerConfigurers.mockUser(mockUser))
                 .get().uri("/cart")
                 .exchange()
                 .expectStatus().isOk()

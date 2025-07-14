@@ -30,7 +30,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import com.redis.testcontainers.RedisContainer;
 
-import dasniko.testcontainers.keycloak.KeycloakContainer;
 import ru.alexgur.intershop.user.service.CustomReactiveUserDetailsService;
 import ru.alexgur.payment.service.PaymentService;
 
@@ -70,14 +69,9 @@ public class BaseTest {
             .withUsername("intershop-test")
             .withPassword("intershop-test");
 
-    private static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:latest")
-            .withRealmImportFile("development-realm.json");
-
     static {
         postgres.start();
         redis.start();
-        keycloak.start();
-        waitServiceToBeReady(keycloak.getAuthServerUrl());
     }
 
     private static void waitServiceToBeReady(String healthCheckUrl) {
@@ -108,25 +102,7 @@ public class BaseTest {
         cacheManager.getCacheNames().forEach(x -> cacheManager.getCache(x).clear());
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
-    }
-
-    @DynamicPropertySource
-    static void registerKeycloakProperties(DynamicPropertyRegistry registry) {
-        String authServerUrl = keycloak.getAuthServerUrl();
-
-        registry.add("keycloak.auth-server-url", () -> authServerUrl);
-        registry.add("keycloak.realm", () -> "master");
-        registry.add("keycloak.resource", () -> "test-app");
-        registry.add("keycloak.credentials.secret", () -> "your_secret_here");
-        registry.add("keycloak.ssl.required", () -> "none");
-
-        System.out.println("=========================");
-        System.out.println("Keycloak URL: " + authServerUrl);
-        System.out.println("Realm: master");
-        System.out.println("Resource: test-app");
-        System.out.println("Credentials Secret: your_secret_here");
-        System.out.println("SSL Required: none");
-        System.out.println("=========================");
+        databaseClient.sql("DELETE FROM users").then().block();
     }
 
     @DynamicPropertySource
