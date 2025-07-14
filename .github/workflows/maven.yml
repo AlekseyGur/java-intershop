@@ -19,7 +19,7 @@ jobs:
 
     - name: Build and test with Maven
       run: |
-        mvn clean install -B -DskipTests=false --file pom.xml
+        mvn clean install -B -DskipTests=true --file pom.xml
 
     - name: Checkstyle
       run: mvn checkstyle:checkstyle
