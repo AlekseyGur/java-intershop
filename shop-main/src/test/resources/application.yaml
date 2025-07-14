@@ -1,0 +1,16 @@
+spring:
+  sql:
+    init:
+      mode: always
+
+  data:
+    redis:
+      timeout: PT10S
+      repositories:
+        enabled: false
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+payment:
+  service:
+    url: http://localhost:8081
