@@ -14,7 +14,6 @@ import org.mockito.Mockito;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
