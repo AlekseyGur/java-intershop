@@ -1,3 +1,5 @@
+-- Items
+
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 1', 'Описание item 1', '/images/item1.jpg', 100.0);
 
@@ -27,3 +29,10 @@ VALUES ('Item 9', 'Описание item 9', '/images/item9.jpg', 900);
 
 INSERT INTO items(title, description, img_path, price)
 VALUES ('Item 1', 'Description item 1', '/images/item1.jpg', 100);
+
+-- Users
+
+INSERT INTO users (username, password, active, roles) 
+VALUES 
+    ('admin', '$2a$10$MfwZEA6sSlMYZ9pnu3moG.M1SQ7wrAWi3MKTNOKKLBKLvLJZ1a9Ya', TRUE, 'ROLE_ADMIN'),
+    ('user', '$2a$10$MfwZEA6sSlMYZ9pnu3moG.M1SQ7wrAWi3MKTNOKKLBKLvLJZ1a9Ya', TRUE, 'ROLE_USER'); -- pass 123456

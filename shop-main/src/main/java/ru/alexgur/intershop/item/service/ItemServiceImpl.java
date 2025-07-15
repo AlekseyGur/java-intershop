@@ -104,8 +104,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Mono<ItemDto> addCartInfo(ItemDto dto) {
-        return orderService.getCart().map(cart -> {
+    public Mono<ItemDto> addCartInfo(ItemDto dto, UUID userId) {
+        return orderService.getCart(userId).map(cart -> {
             return cart.getItems();
         }).defaultIfEmpty(Collections.emptyList()).flatMap(items -> {
 
@@ -121,9 +121,9 @@ public class ItemServiceImpl implements ItemService {
         });
     }
 
-    public Mono<SimplePage<ItemDto>> addCartInfo(SimplePage<ItemDto> page) {
+    public Mono<SimplePage<ItemDto>> addCartInfo(SimplePage<ItemDto> page, UUID userId) {
         var updatedContent = Flux.fromIterable(page.getContent())
-                .flatMap(this::addCartInfo)
+                .flatMap(x -> addCartInfo(x, userId))
                 .collectList();
 
         return Mono.zip(updatedContent, Mono.just(page.getTotalElements()))

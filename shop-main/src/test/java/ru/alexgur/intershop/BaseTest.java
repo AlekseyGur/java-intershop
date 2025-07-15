@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,20 +13,24 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.client.RestTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-
 import com.redis.testcontainers.RedisContainer;
 
+import ru.alexgur.intershop.user.service.CustomReactiveUserDetailsService;
 import ru.alexgur.payment.service.PaymentService;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,6 +38,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 
 @SpringBootTest(classes = { MainIntershop.class })
+@Import(TestSecurityConfig.class)
+@EnableWebFluxSecurity
 @AutoConfigureWebTestClient
 public class BaseTest {
 
@@ -46,6 +54,9 @@ public class BaseTest {
 
     @MockitoBean
     public PaymentService paymentService;
+
+    @MockitoBean
+    public CustomReactiveUserDetailsService customReactiveUserDetailsService;
 
     @Autowired
     public CacheManager cacheManager;
@@ -63,12 +74,35 @@ public class BaseTest {
         redis.start();
     }
 
+    private static void waitServiceToBeReady(String healthCheckUrl) {
+        boolean ready = false;
+        while (!ready) {
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<String> response = restTemplate.getForEntity(healthCheckUrl, String.class);
+                if (response.getStatusCode() == HttpStatus.OK && response.hasBody()) {
+                    ready = true;
+                }
+            } catch (Exception ex) {
+                System.err.println("Waiting for Keycloak to start...");
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(ie);
+                }
+            }
+        }
+        System.out.println("Keycloak is now fully ready.");
+    }
+
     @AfterEach
     @BeforeEach
     void cleanDb() {
         cacheManager.getCacheNames().forEach(x -> cacheManager.getCache(x).clear());
         databaseClient.sql("DELETE FROM order_items").then().block();
         databaseClient.sql("DELETE FROM orders").then().block();
+        databaseClient.sql("DELETE FROM users").then().block();
     }
 
     @DynamicPropertySource
@@ -100,6 +134,7 @@ public class BaseTest {
         registry.add("spring.r2dbc.password", postgres::getPassword);
 
         System.out.println("=========================");
+        System.out.println("Postgres:");
         System.out.println("docker exec -it " + containerId + " psql -U " + username + " -d " + dbName);
         System.out.println("=========================");
     }
@@ -130,4 +165,5 @@ public class BaseTest {
         String responseBody = new String(result.getResponseBodyContent(), StandardCharsets.UTF_8);
         assertTrue(responseBody.contains("</html>"), "Ответ должен содержать закрывающий тег </html>");
     }
+
 }
