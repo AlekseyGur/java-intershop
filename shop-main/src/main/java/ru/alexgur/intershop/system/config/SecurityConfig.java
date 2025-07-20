@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,9 +24,7 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableMethodSecurity(prePostEnabled = true, // Включаем поддержку @PreAuthorize и @PostAuthorize
-        securedEnabled = true // Опционально, если нужна поддержка @Secured
-)
+@EnableReactiveMethodSecurity
 public class SecurityConfig {
 
     private static final String UUID_REGEX = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$";

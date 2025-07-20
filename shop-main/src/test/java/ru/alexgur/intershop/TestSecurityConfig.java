@@ -25,6 +25,7 @@ public class TestSecurityConfig {
                 .authorizationUri("http://fake-auth")
                 .tokenUri("http://fake-token")
                 .userInfoUri("http://fake-userinfo")
+                .issuerUri("http://fake-userinfo")
                 .userNameAttributeName("sub")
                 .clientName("Test Client")
                 .build();

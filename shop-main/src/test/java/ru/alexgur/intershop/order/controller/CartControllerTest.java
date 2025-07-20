@@ -3,7 +3,6 @@ package ru.alexgur.intershop.order.controller;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -11,13 +10,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -33,8 +30,6 @@ import ru.alexgur.intershop.user.model.User;
 import ru.alexgur.intershop.user.repository.UserRepository;
 import ru.alexgur.payment.model.Balance;
 
-@SpringBootTest
-@AutoConfigureWebTestClient
 class CartControllerTest extends BaseTest {
 
     @Autowired
@@ -60,7 +55,11 @@ class CartControllerTest extends BaseTest {
 
     @BeforeEach
     public void getFirstSavedItemId() {
-        firstSavedItem = itemServiceImpl.getAll(0, 1, "", SortType.ALPHA).block().getContent().get(0);
+        firstSavedItem =
+            itemServiceImpl.getAll(0, 1, "", SortType.ALPHA)
+                .block()
+                .getContent()
+                .get(0);
         firstSavedItemId = firstSavedItem.getId();
 
         User userEntity = User.builder()
@@ -74,7 +73,7 @@ class CartControllerTest extends BaseTest {
                 .userId(this.testUserId)
                 .username("test")
                 .password(passwordEncoder.encode("test"))
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
+                .authorities(AuthorityUtils.createAuthorityList("ROLE_USER"))
                 .enabled(true)
                 .accountNonExpired(true)
                 .credentialsNonExpired(true)
@@ -89,13 +88,16 @@ class CartControllerTest extends BaseTest {
 
     @Test
     public void getCartItems() throws Exception {
-        Mockito.when(customReactiveUserDetailsService.findByUsername(anyString())).thenReturn(Mono.just(mockUser));
+        Mockito.when(customReactiveUserDetailsService.findByUsername(anyString()))
+            .thenReturn(Mono.just(mockUser));
 
         webTestClient
                 .mutateWith(SecurityMockServerConfigurers.mockUser(mockUser))
-                .get().uri("/cart")
+                .get()
+                .uri("/cart")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
                 .consumeWith(this::hasStatusOkAndClosedHtml);
     }
