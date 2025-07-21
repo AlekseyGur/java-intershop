@@ -37,6 +37,7 @@ logging:
     org:
       springframework:
         security: DEBUG
+        aop: TRACE
         r2dbc: INFO
         web: INFO
         http: INFO
@@ -48,4 +49,3 @@ logging:
         netty: INFO
         core: 
           publisher: DEBUG
-
